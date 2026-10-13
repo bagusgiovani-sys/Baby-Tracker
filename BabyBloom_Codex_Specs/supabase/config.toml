@@ -1,0 +1,30 @@
+project_id = "babybloom-local"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 17
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[auth]
+enabled = true
+site_url = "babybloom://auth/callback"
+additional_redirect_urls = ["babybloom://auth/callback", "http://localhost:8081/auth/callback", "http://127.0.0.1:8081/auth/callback"]
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true
+
+[auth.rate_limit]
+email_sent = 10
+token_verifications = 30

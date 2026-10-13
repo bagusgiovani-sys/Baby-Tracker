@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "name": "BabyBloom",
+    "slug": "babybloom",
+    "scheme": "babybloom",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "plugins": ["expo-router", "expo-secure-store", ["expo-sqlite", { "useSQLCipher": true }]],
+    "ios": { "bundleIdentifier": "id.babybloom.diary", "supportsTablet": true },
+    "android": { "package": "id.babybloom.diary" },
+    "web": { "bundler": "metro", "output": "single" },
+    "experiments": { "typedRoutes": true }
+  }
+}
