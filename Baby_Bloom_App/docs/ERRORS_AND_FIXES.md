@@ -2,6 +2,8 @@
 
 Last updated: 2026-10-14.
 
+- LANGUAGE-009: Eng/IND previously swapped text without a transition. Added a shared 320ms fade/slide without remounting screens. Full checks pass 43 core/server/queue + 21 database + 47 UI = 111 cases; guarded export passes. Actual Framer-engine tests cover intermediate/end frames, focused text input value/cursor preservation, and rapid toggles. Separate anonymous Chrome QA of the rebuilt export confirms translated headings, changing opacity frames, completion at opacity 1 and retained email DOM/value/focus. Single-row header still fits widths 320/360/407/1280. Browser email inputs do not support setSelectionRange; Chrome checks focus/value while the text-input runtime fixture verifies cursor preservation. No email was sent and no private records were accessed.
+
 ## Latest login, header and storage recovery
 
 - LOGIN-008: A saved session redirected the email-login page to the same failed diary. Removed that redirect and the Welcome session bypass. Successful OTP verification/callback exchange explicitly enters Today and retries initialization; the completion callback remains stable across renders. Saved-session startup failure opens email login. Tests cover restored-session storage failure, successful-only verification callbacks and actual repository reopening.

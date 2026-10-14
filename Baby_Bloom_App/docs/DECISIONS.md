@@ -44,6 +44,8 @@ These decisions supplement the original product specifications. This delivery st
 
 ## Security and storage assumptions
 
+- DESIGN-009 (2026-10-14): Language changes replay a 320ms fade and 8px slide on the shared app content using Framer Motion on web and Animated on native. Keep the mounted route tree and inputs; never key the app by locale or replay the splash. Rapid language changes cancel the previous transition and settle on the latest translation. No new dependency or persistence format is needed.
+
 - STORAGE-004 / LOGIN-008 (2026-10-14): Expo SQLite's web OPFS access handles require a single active connection-owning document. Hold a document-lifetime Web Lock before opening the worker so a second tab cannot partially initialize and poison its VFS. A blocked tab may reopen after the owner closes; web recovery reloads previously failed workers. Preserve encryption, keys and queued data; do not clear storage or substitute plaintext. Welcome and email login remain available independently of diary initialization. Saved sessions do not automatically bypass email login; successful code verification/callback exchange explicitly enters the diary. Compact header controls use Eng | IND, an accessible Theme icon and a hamburger dropdown containing Settings.
 
 - Table grants, RLS and security-definer RPC checks work together. Clients cannot directly write protected tables or read mutation receipts. The service-role key is never part of client configuration. Invitation tables are present but server-managed; there is no invitation-sending flow yet.

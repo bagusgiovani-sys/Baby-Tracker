@@ -4,6 +4,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { HeartMark, MotionPage, MotionSurface } from '../src/components/motion.web';
 import { FetusMark } from '../src/components/fetus-mark.web';
 import { LaunchTransition } from '../src/components/launch-motion.web';
+import { LanguageTransition } from '../src/components/language-transition.web';
 jest.mock('../src/components/fetus-mark', () =>
   jest.requireActual('../src/components/fetus-mark.web'),
 );
@@ -84,6 +85,41 @@ async function frameAfter(ms: number) {
     await new Promise((resolve) => setTimeout(resolve, ms));
   });
 }
+
+test('language changes animate translated content without replacing focused draft inputs', async () => {
+  const screen = (locale: string) => (
+    <LanguageTransition locale={locale}>
+      <label htmlFor="synthetic-draft">{locale === 'en' ? 'Email' : 'Surel'}</label>
+      <input id="synthetic-draft" defaultValue="" />
+    </LanguageTransition>
+  );
+  await act(async () => root.render(screen('en')));
+  const surface = host.firstElementChild as HTMLElement;
+  const input = host.querySelector('input')!;
+  input.value = 'synthetic draft';
+  input.focus();
+  input.setSelectionRange(3, 7);
+  await act(async () => root.render(screen('id-ID')));
+  expect(host.querySelector('label')!.textContent).toBe('Surel');
+  expect(Number(surface.style.opacity)).toBeLessThan(1);
+  await frameAfter(80);
+  expect(Number(surface.style.opacity)).toBeGreaterThan(0.2);
+  expect(Number(surface.style.opacity)).toBeLessThan(1);
+  await frameAfter(400);
+  expect(Number(surface.style.opacity)).toBeCloseTo(1);
+  expect(host.querySelector('input')).toBe(input);
+  expect(input.value).toBe('synthetic draft');
+  expect(document.activeElement).toBe(input);
+  expect(input.selectionStart).toBe(3);
+  expect(input.selectionEnd).toBe(7);
+  await act(async () => root.render(screen('en')));
+  await frameAfter(40);
+  await act(async () => root.render(screen('id-ID')));
+  await frameAfter(450);
+  expect(host.querySelector('label')!.textContent).toBe('Surel');
+  expect(Number(surface.style.opacity)).toBeCloseTo(1);
+  expect(host.querySelector('input')).toBe(input);
+});
 
 test('the real Framer engine changes the heart transform over successive frames', async () => {
   await act(async () => root.render(<HeartMark />));
