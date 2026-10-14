@@ -20,6 +20,7 @@ You are building an infant tracking application. Treat the `.md` files in `docs/
 Expo Router, React Native, TypeScript strict mode, React Query (or equivalent), Zod schema validation, Supabase, Postgres SQL migrations, `expo-sqlite` local durable log storage, a test runner suitable for pure domain code plus React Native testing library for components. Pin stable versions compatible with the latest chosen Expo SDK after checking available current dependencies. No unnecessary packages.
 
 ## Coding style
+- Record meaningful errors, fixes, validation evidence and unresolved blockers in `docs/ERRORS_AND_FIXES.md`; keep source-only fixes distinct from verified runtime behavior and omit credentials or personal records.
 - Domain type definitions separate from components; screen components thin.
 - Avoid a huge polymorphic `jsonb` blob as the only source of truth: normalized typed detail tables with an event envelope and appropriate CHECK constraints.
 - Apply migrations incrementally; include down/reversal guidance where possible.

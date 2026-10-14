@@ -6,7 +6,7 @@ Validated locally on 2026-10-13. Source implementation is present; the complete 
 
 Added vercel.json with Expo SPA fallback, SQLite isolation headers, WASM content type and a deployment build command. Added upload exclusions and constrained Node to the 22.x line. Deployment now requires valid public HTTPS Supabase settings and a full app typecheck before export. Five synthetic deployment-environment checks passed (valid settings, missing settings, local URL, server-secret key and invalid API path). This exposed and fixed URL validation throwing on empty/malformed strings; the existing environment test now covers both inputs.
 
-Vercel and Supabase integrations were found but are not connected in the latest confirmed state. There is no .env, linked Vercel project, authenticated deployment CLI or Git remote in this workspace. A fresh registry check still failed with ECONNREFUSED. No deployment was attempted without account access. See VERCEL_DEPLOYMENT.md for the prepared configuration and remaining setup.
+Vercel and Supabase integrations were found but are not connected in the latest confirmed state. On 2026-10-14 the supplied project URL and publishable key were saved in an ignored local .env, and deployment-setting validation passed. The user reported both SQL Editor migrations succeeded; live schema/auth have not been independently inspected. There is no confirmed linked Vercel project, authenticated deployment CLI or Git remote in this workspace. The latest recorded registry check failed with ECONNREFUSED. No deployment was attempted without account access. See VERCEL_DEPLOYMENT.md for the prepared configuration and remaining setup, and ERRORS_AND_FIXES.md for the issue log.
 
 ## Implemented areas
 

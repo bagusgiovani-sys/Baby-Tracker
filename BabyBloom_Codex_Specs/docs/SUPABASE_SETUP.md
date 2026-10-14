@@ -28,6 +28,8 @@ You do not need to give the browser app your database password, personal access 
 
 In **Authentication**, open the email provider configuration and ensure Email and new-user signup are enabled. Keep email confirmation enabled.
 
+The hosted dashboard may show **Set up custom SMTP to edit templates**. If it does, editing is unavailable until SMTP is configured. For the quickest team-account test, keep the default templates and use the emailed magic link instead of a numeric code. The app has a callback route for that flow; open the link in the same browser and on the same device where you requested it. Full remote authentication verification remains pending deployment. Numeric OTP requires a template that actually includes the token.
+
 Open **Email Templates** and select **Magic Link / OTP**. Make sure the message body contains the following so the app can accept a code:
 
 ```html
@@ -36,6 +38,8 @@ Open **Email Templates** and select **Magic Link / OTP**. Make sure the message 
 ```
 
 Save the template. If the dashboard uses a separate **Confirm signup** template for first-time users, include the same token there too. See [email templates](https://supabase.com/docs/guides/auth/auth-email-templates) and [passwordless email login](https://supabase.com/docs/guides/auth/auth-email-passwordless).
+
+If template editing is locked, do this token-template step after Custom SMTP setup; do not assume the default email contains a numeric code.
 
 For initial testing, the default email sender only accepts addresses belonging to your Supabase organization team and has a low sending limit. Use your team-account email. Before allowing other users to sign in, configure **Custom SMTP** in Authentication with your email provider's host, port, username, password and verified sender address. Save and test delivery. See [Supabase SMTP setup](https://supabase.com/docs/guides/auth/auth-smtp).
 

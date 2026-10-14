@@ -12,6 +12,8 @@ The original [build-pack README](docs/BUILD_PACK_README.md), [field dictionary](
 
 For first-time backend setup, follow [Supabase setup step by step](docs/SUPABASE_SETUP.md).
 
+Known errors, fixes, validation evidence and unresolved blockers are tracked in [ERRORS_AND_FIXES.md](docs/ERRORS_AND_FIXES.md).
+
 Use Node 22.15 or newer. Run these commands from this folder, beside package.json:
 
 ```powershell
