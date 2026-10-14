@@ -1,0 +1,43 @@
+name: Checks
+on: [push, pull_request]
+permissions:
+  contents: read
+defaults:
+  run:
+    working-directory: Baby_Bloom_App
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    env:
+      EXPO_NO_TELEMETRY: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: Baby_Bloom_App/package-lock.json
+      - name: Install locked dependencies
+        run: npm ci
+      - run: npm run check
+      - name: Export web app with synthetic backend configuration
+        run: npm run build:vercel
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_ci_placeholder_only
+      - name: Audit all dependencies online
+        run: npm run audit:dependencies
+      - name: Audit runtime dependencies online
+        if: success() || failure()
+        run: npm run audit:runtime
+  supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase start
+      - run: supabase db reset
+      - if: always()
+        run: supabase stop --no-backup

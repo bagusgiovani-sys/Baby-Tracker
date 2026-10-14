@@ -1,0 +1,15 @@
+node_modules
+.tooling
+.npm-cache
+.expo
+.expo-home
+.env
+.env.*
+!.env.example
+android
+ios
+coverage
+*.db
+*.db-wal
+*.db-shm
+supabase/.temp
