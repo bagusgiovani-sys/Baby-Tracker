@@ -14,7 +14,6 @@ type Options = {
   url?: string;
   publicKey?: string;
   apiKey?: string;
-  model?: string;
   fetcher?: typeof fetch;
   now?: Date;
 };
@@ -89,20 +88,27 @@ export async function generateReport(input: unknown, bearer: string, options: Op
       quota.error.message.includes('unauthorized') ? 'unauthorized' : 'backend_update_required',
     );
   if (!quota.data) throw new ReportError(429, 'ai_rate_limited');
-  const response = await fetcher('https://api.openai.com/v1/responses', {
+  const response = await fetcher('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + options.apiKey, 'Content-Type': 'application/json' },
     signal: AbortSignal.timeout(35000),
     body: JSON.stringify({
-      model: options.model ?? 'gpt-4.1-mini-2025-04-14',
-      store: false,
-      max_output_tokens: 700,
-      instructions:
-        'You prioritize grounded diary-review insights. Return only eligible insight codes, in priority order, maximum 6. The supplied totals are partial recorded intake, not complete biological intake. Never infer deficiency, adequacy, diagnosis, growth percentiles, breastfeeding volume, dosing, or treatment. Prematurity and measurements are consultation context. Include review_sources. Do not produce prose or new numerical claims.',
-      input: JSON.stringify(aiFacts(report)),
-      text: {
-        format: {
-          type: 'json_schema',
+      model: 'openai/gpt-oss-120b',
+      stream: false,
+      max_completion_tokens: 2048,
+      reasoning_effort: 'low',
+      include_reasoning: false,
+      messages: [
+        {
+          role: 'system',
+          content:
+            'You prioritize grounded diary-review insights. Return only eligible insight codes, in priority order, maximum 6. The supplied totals are partial recorded intake, not complete biological intake. Never infer deficiency, adequacy, diagnosis, growth percentiles, breastfeeding volume, dosing, or treatment. Prematurity and measurements are consultation context. Include review_sources. Do not produce prose or new numerical claims.',
+        },
+        { role: 'user', content: JSON.stringify(aiFacts(report)) },
+      ],
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
           name: 'diary_insights',
           strict: true,
           schema: {
@@ -116,22 +122,31 @@ export async function generateReport(input: unknown, bearer: string, options: Op
         },
       },
     }),
+  }).catch(() => {
+    throw new ReportError(502, 'ai_unavailable');
   });
+  if (response.status === 429) throw new ReportError(429, 'ai_provider_rate_limited');
+  if (response.status === 401 || response.status === 403)
+    throw new ReportError(503, 'ai_not_configured');
   if (!response.ok) throw new ReportError(502, 'ai_unavailable');
-  const body = (await response.json()) as {
-    status?: string;
-    output?: { type: string; content?: { type: string; text?: string }[] }[];
-  };
-  if (body.status !== 'completed') throw new ReportError(502, 'ai_unavailable');
-  const texts =
-    body.output?.flatMap((item) =>
-      item.type === 'message'
-        ? (item.content ?? []).filter((c) => c.type === 'output_text').map((c) => c.text ?? '')
-        : [],
-    ) ?? [];
   let output: unknown;
   try {
-    output = JSON.parse(texts.join(''));
+    const body = z
+      .object({
+        choices: z
+          .array(
+            z.object({
+              finish_reason: z.literal('stop'),
+              message: z.object({
+                content: z.string().max(4096),
+                refusal: z.null().optional(),
+              }),
+            }),
+          )
+          .length(1),
+      })
+      .parse(await response.json());
+    output = JSON.parse(body.choices[0]!.message.content);
   } catch {
     throw new ReportError(502, 'ai_unavailable');
   }

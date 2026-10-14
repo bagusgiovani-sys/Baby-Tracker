@@ -46,8 +46,7 @@ export default async function handler(
     const result = await generateReport(body, bearer, {
       url: process.env.EXPO_PUBLIC_SUPABASE_URL,
       publicKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
-      apiKey: process.env.OPENAI_API_KEY,
-      model: process.env.OPENAI_MODEL,
+      apiKey: process.env.GROQ_API_KEY,
     });
     reply(200, result);
   } catch (e) {

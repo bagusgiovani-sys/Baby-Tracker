@@ -26,13 +26,15 @@ export const id = {
     'Lengkapi porsi dan sumber nutrisi yang belum tercatat agar ringkasan lebih berguna.',
   ai_heading: 'Insight AI dari catatan tersinkron',
   ai_rate_limited: 'Batas laporan AI harian tercapai. Coba besok.',
+  ai_provider_rate_limited:
+    'Kuota AI gratis sedang tercapai. Coba lagi nanti; laporan hitung tetap tersedia.',
   ai_requires_sync:
     'Sinkronkan catatan terlebih dahulu. AI hanya membaca catatan tersimpan di server.',
   ai_not_configured:
-    'Insight AI memerlukan OPENAI_API_KEY pada server Vercel. Laporan hitung tetap tersedia.',
+    'Koneksi AI belum siap. Hubungi pengelola aplikasi; laporan hitung tetap tersedia.',
   ai_pending: 'Menyusun insight…',
   ai_consent:
-    'Saya setuju mengirim ringkasan angka dan konteks usia / pengukuran ke AI. Nama, catatan bebas, ID, dan tanggal lahir tidak dikirim ke AI.',
+    'Saya setuju mengirim ringkasan angka dan konteks usia / pengukuran ke Groq untuk insight AI. Nama, catatan bebas, ID, dan tanggal lahir tidak dikirim.',
   ai_report: 'Susun insight AI',
   export_unavailable: 'Ekspor infografik tersedia di web.',
   export_report: 'Unduh infografik',
@@ -402,12 +404,14 @@ export const en: Record<TextKey, string> = {
     'Add missing consumed portions and nutrition sources to make the summary more useful.',
   ai_heading: 'AI insights from synced records',
   ai_rate_limited: 'Today’s AI report limit has been reached. Try tomorrow.',
+  ai_provider_rate_limited:
+    'The free AI quota has been reached. Try later; calculated reports remain available.',
   ai_requires_sync: 'Sync your entries first. AI reads only server-saved records.',
   ai_not_configured:
-    'AI insights need OPENAI_API_KEY on the Vercel server. Calculated reports remain available.',
+    'The AI connection is not ready. Contact the app administrator; calculated reports remain available.',
   ai_pending: 'Preparing insights…',
   ai_consent:
-    'I agree to send numeric summaries and age / measurement context to AI. Names, free-text notes, IDs, and birth dates are not sent to AI.',
+    'I agree to send numeric summaries and age / measurement context to Groq for AI insights. Names, free-text notes, IDs, and birth dates are not sent.',
   ai_report: 'Generate AI insights',
   export_unavailable: 'Infographic download is available on the web.',
   export_report: 'Download infographic',
