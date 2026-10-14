@@ -1,5 +1,23 @@
 # Vercel deployment
 
+## Current redesigned application
+
+Current always-on/header/splash update: user explicitly removed motion controls and requested always-on animation, a persistent English/Bahasa top selector, and a Hi, Mom! animated fetus splash. Implemented in TypeScript with no new dependencies. Source checks pass (63 results), and local/remote guarded builds pass. Deployment dpl_EDueYysBZFkfdywUzaMWaZ2ZDrvz is READY at the primary app. HTTP checks verify the new markers, removed controls, deferred JavaScript and SQLite assets. Actual live heart/fetus modules move in isolated DOM fixtures even with device reduction enabled; graphical browser QA remains unavailable. The intro appears once per full app load and waits for initial session readiness before its exit. No Git commit/push was made. Older motion-control descriptions below are deployment history, not current behavior.
+
+Motion-control fix on 2026-10-14: the primary welcome URL was confirmed by the user. The header now offers Enable animations / Reduce animations, and Settings offers saved system/full/reduced choices. Full checks pass (61 results), and local/remote guarded builds pass. Deployment dpl_8MDNTYZYhFEN2QQMfB3QBDXi5eur is READY at the primary host. Anonymous HTTP checks verify the toggle/preferences, deferred JavaScript, headers and SQLite assets. The actual live bundle moves in an isolated DOM fixture with a deliberate full override even when the device preference requests reduction; this does not verify graphical browser appearance. Only baby-bloom-gio was targeted by this fix; the earlier omega project remains unused. Source has not been committed or pushed.
+
+Motion follow-up on 2026-10-14: the orbital atom has been replaced by a pulsing care heart and baby silhouette. Screen focus replays slide/fade entrances while preserving draft input. Sections reveal in the viewport, care icons move, and skeletons shimmer during real loading. Four web screens use React.lazy/Suspense and export as separate JavaScript chunks; the essential editor warms after online login. Source checks pass (55 results), and local/remote guarded exports pass. Deployment dpl_DHHuiJTiXg9oBcJ5bx1byvcYcF8v is READY at the primary app. Anonymous HTTP checks verify the new heart/skeleton markers, four deferred chunks returning JavaScript, app shells, isolation headers and SQLite assets. Browser animation playback remains unverified because the browser connection cannot start. No new dependency installation was needed, and this update was published directly through CLI without creating or pushing Git history.
+
+Primary user app: [https://baby-bloom-gio.vercel.app](https://baby-bloom-gio.vercel.app). The green/black Framer Motion redesign and resend-code flow were published to the user's dashboard-created baby-bloom-gio project on 2026-10-14. That project is connected to the same Baby-Tracker repository; its previously unset Root Directory and build settings were configured for Baby_Bloom_App, Node 22.x, npm ci, the guarded build and dist. Existing public backend variables were preserved. The latest deployment reached READY; anonymous HTTP checks confirm the app shells, configured backend, redesigned bundle markers, required headers and SQLite assets. Browser visual QA and actual email delivery are unverified.
+
+For this primary app, Supabase Auth Site URL should be `https://baby-bloom-gio.vercel.app`, with `https://baby-bloom-gio.vercel.app/auth/callback` allowlisted. The agent has not changed Supabase's URL configuration. Keep any callback URLs needed for other supported hosts/native builds.
+
+The workspace's existing .vercel link still identifies the earlier babybloom CLI project. For future uploads to the primary app, run the documented repository-root CLI command with `--project baby-bloom-gio` instead of `--project babybloom`. Both source trees still need a normal Git commit/push to preserve this turn's edits in future Git deployments; no new Git history was created or pushed by this turn.
+
+The installer issue found while adding Framer Motion was corrected by regenerating the lockfile with npm 10.9.4 in a clean directory, matching Vercel's npm major version. Fresh Linux installation and remote builds pass. Existing security findings remain visible; no force dependency upgrade or legacy-peer-deps workaround was applied.
+
+## Earlier CLI deployment
+
 BabyBloom is deployed at [https://babybloom-omega.vercel.app](https://babybloom-omega.vercel.app). The new babybloom project belongs to the user's personal Vercel Hobby workspace. Its production deployment reached READY on 2026-10-14 after npm ci, public configuration validation, full TypeScript and Expo web export succeeded remotely.
 
 Anonymous HTTP verification passed for the root, /sign-in and /auth/callback app shells, isolation/security headers, application JavaScript with the configured public backend, SQLite WASM with correct MIME/magic bytes, the actual deployed SQLite worker, and the public Supabase auth settings endpoint (email enabled). This verifies hosting and backend reachability, not interactive login or browser persistence. Dependency findings and Sprint 1 runtime acceptance remain open.
@@ -23,7 +41,7 @@ Use this folder (the one containing package.json and vercel.json) as the project
 
 The build validates the public backend configuration, runs the full TypeScript check, and exports Expo's single-page web app. Both local and remote guarded builds pass. Runtime acceptance and dependency security findings remain open. A local .env is loaded optionally for preflight; cloud-provided variables keep precedence.
 
-The hosting configuration follows [Expo's Vercel deployment guide](https://docs.expo.dev/guides/publishing-websites/#vercel). It supplies SPA route fallback for direct links and auth callbacks, plus cross-origin isolation for SQLite WASM. Unlike some other hosts, Vercel reads these headers from vercel.json, not public/_headers. See [Vercel configuration](https://vercel.com/docs/project-configuration/vercel-json).
+The hosting configuration follows [Expo's Vercel deployment guide](https://docs.expo.dev/guides/publishing-websites/#vercel). It supplies SPA route fallback for direct links and auth callbacks, plus cross-origin isolation for SQLite WASM. Unlike some other hosts, Vercel reads these headers from vercel.json, not public/\_headers. See [Vercel configuration](https://vercel.com/docs/project-configuration/vercel-json).
 
 ## Supabase configuration
 
@@ -31,9 +49,9 @@ For dashboard setup from scratch, follow [SUPABASE_SETUP.md](SUPABASE_SETUP.md),
 
 Set these in Vercel Project Settings > Environment Variables for each intended deployment environment:
 
-| Name | Value |
-| --- | --- |
-| EXPO_PUBLIC_SUPABASE_URL | The project's public HTTPS API origin |
+| Name                          | Value                                  |
+| ----------------------------- | -------------------------------------- |
+| EXPO_PUBLIC_SUPABASE_URL      | The project's public HTTPS API origin  |
 | EXPO_PUBLIC_SUPABASE_ANON_KEY | Its publishable key or legacy anon key |
 
 These values are compiled into the browser bundle. Never set a service-role/secret key here. Redeploy after changing them. Production and Preview should point to the intended backend; a separate test backend is preferable for previews.

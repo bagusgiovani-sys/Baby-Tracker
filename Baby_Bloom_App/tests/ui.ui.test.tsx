@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, userEvent } from '@testing-library/react-native';
+import { act, fireEvent, render, userEvent } from '@testing-library/react-native';
 import { Button, Choice, ConfirmAction, Feedback } from '../src/components/ui';
 import { TimestampField } from '../src/components/timestamp-field';
 jest.mock('../src/lib/store', () => ({
@@ -27,7 +27,7 @@ test('optional observations remain unanswered until a caregiver selects an obser
   fireEvent.press(screen.getByRole('radio', { name: 'No' }));
   expect(change).toHaveBeenCalledWith('no');
 });
-test('delete requires an explicit second action and cancel preserves the entry', () => {
+test('delete requires an explicit second action and cancel preserves the entry', async () => {
   const remove = jest.fn();
   const screen = render(
     <ConfirmAction
@@ -37,12 +37,21 @@ test('delete requires an explicit second action and cancel preserves the entry',
       onConfirm={remove}
     />,
   );
-  fireEvent.press(screen.getByRole('button', { name: 'Delete' }));
+  await act(async () => {});
+  await act(async () => {
+    fireEvent.press(screen.getByRole('button', { name: 'Delete' }));
+  });
   expect(remove).not.toHaveBeenCalled();
-  fireEvent.press(screen.getByRole('button', { name: 'Cancel' }));
+  await act(async () => {
+    fireEvent.press(screen.getByRole('button', { name: 'Cancel' }));
+  });
   expect(remove).not.toHaveBeenCalled();
-  fireEvent.press(screen.getByRole('button', { name: 'Delete' }));
-  fireEvent.press(screen.getByRole('button', { name: 'Delete' }));
+  await act(async () => {
+    fireEvent.press(screen.getByRole('button', { name: 'Delete' }));
+  });
+  await act(async () => {
+    fireEvent.press(screen.getByRole('button', { name: 'Delete' }));
+  });
   expect(remove).toHaveBeenCalledTimes(1);
 });
 test('disabled save cannot submit and validation is announced', async () => {

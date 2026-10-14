@@ -6,7 +6,7 @@
   "devCommand": "npm run web",
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/:path*", "destination": "/" }
+    { "source": "/((?!api(?:/|$)).*)", "destination": "/" }
   ],
   "headers": [
     {

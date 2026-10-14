@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "module": "Node16",
+    "moduleResolution": "node16",
+    "customConditions": [],
+    "target": "ES2022",
+    "rewriteRelativeImportExtensions": true,
+    "noEmit": false,
+    "rootDir": ".."
+  },
+  "include": ["./reports.ts"],
+  "exclude": ["../node_modules", "../tests"]
+}

@@ -14,6 +14,8 @@ export type Database = {
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
     Functions: {
+      journal_schema_version: { Args: Record<PropertyKey, never>; Returns: number };
+      claim_report_request: { Args: { p_baby_id: string }; Returns: boolean };
       create_baby: {
         Args: {
           p_input: Json;

@@ -1,4 +1,11 @@
 import { z } from 'zod';
+import {
+  mealDetailSchema,
+  measurementDetailSchema,
+  checkinDetailSchema,
+  nutritionSchema,
+} from './journal.ts';
+import { dayKey } from './time.ts';
 export const feedingKinds = [
   'direct_breast',
   'expressed_breastmilk_bottle',
@@ -40,6 +47,7 @@ const feeding = z
         breast_side: z.enum(sides).nullable(),
         volume_offered_ml: offeredVolume,
         volume_consumed_ml: consumedVolume,
+        nutrition: nutritionSchema.nullable().optional(),
       })
       .strict(),
   })
@@ -75,15 +83,45 @@ const sleep = z
   })
   .strict();
 export const eventSchema = z
-  .discriminatedUnion('event_type', [feeding, diaper, sleep])
+  .discriminatedUnion('event_type', [
+    feeding,
+    diaper,
+    sleep,
+    z.object({ ...envelope, event_type: z.literal('meal'), detail: mealDetailSchema }).strict(),
+    z
+      .object({
+        ...envelope,
+        event_type: z.literal('measurement'),
+        detail: measurementDetailSchema,
+      })
+      .strict(),
+    z
+      .object({ ...envelope, event_type: z.literal('checkin'), detail: checkinDetailSchema })
+      .strict(),
+  ])
   .superRefine((event, ctx) => {
     const fail = (path: string[], message: string) =>
       ctx.addIssue({ code: 'custom', path, message });
     if (event.ended_at && Date.parse(event.ended_at) < Date.parse(event.occurred_at))
       fail(['ended_at'], 'end_before_start');
     if (event.event_type === 'diaper' && event.ended_at) fail(['ended_at'], 'invalid');
+    if (['meal', 'measurement', 'checkin'].includes(event.event_type) && event.ended_at)
+      fail(['ended_at'], 'invalid');
+    if (
+      event.event_type === 'checkin' &&
+      dayKey(new Date(event.occurred_at), event.detail.timezone_at_entry) !== event.detail.local_day
+    )
+      fail(['detail', 'local_day'], 'invalid');
+    if (
+      event.event_type === 'meal' &&
+      event.detail.nutrition &&
+      event.detail.portion_consumed === null
+    )
+      fail(['detail', 'nutrition'], 'nutrition_needs_portion');
     if (event.event_type === 'feeding') {
       const d = event.detail;
+      if (d.nutrition && (d.feeding_kind === 'direct_breast' || d.volume_consumed_ml === null))
+        fail(['detail', 'nutrition'], 'nutrition_needs_portion');
       if (
         d.feeding_kind === 'direct_breast' &&
         (d.volume_consumed_ml !== null || d.volume_offered_ml !== null)

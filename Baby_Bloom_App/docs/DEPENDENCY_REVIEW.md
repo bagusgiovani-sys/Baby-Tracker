@@ -1,15 +1,16 @@
 ﻿# Dependency review
 
-Updated 2026-10-14 after fresh online audits. No dependency versions or overrides were changed.
+Updated 2026-10-14 after fresh online audits. Framer Motion 14.2.0 was added for the user-requested redesign. Existing Expo/React/native version pins remain unchanged, and no security overrides or force upgrades were applied. Its lockfile was repaired for optional Linux dependencies after the Windows installer pruned entries.
 
 ## Verified results
 
 | Audit | Moderate | High | Critical | Total |
 | --- | --- | --- | --- | --- |
-| All dependencies | 15 | 49 | 0 | 64 |
+| Windows installed dependency tree after adding Framer Motion | 15 | 48 | 0 | 63 |
+| Vercel Linux clean installation after lockfile repair | 15 | 49 | 0 | 64 |
 | Excluding development dependencies | 15 | 45 | 0 | 60 |
 
-Both online commands completed with exit code 1 because findings exist. Formatting, lint, strict TypeScript, 44 test results and guarded web export pass; these do not clear security findings.
+The local online commands completed with exit code 1 because findings exist. The installed Windows tree reports 63 findings; Vercel's fresh Linux installation reports 64. Platform/dependency-path differences do not establish that an underlying advisory was fixed. The local updated audit does not report Framer Motion as an affected package. Formatting, lint, strict TypeScript, 49 test results and guarded web export pass; these do not clear security findings.
 
 The sandbox sets NPM_CONFIG_OFFLINE=true. Plain npm audit returned zero without contacting the registry, which is inconclusive. Explicit online mode initially failed through the sandbox proxy; approved execution outside the sandbox obtained both fresh reports. Use the new scripts:
 

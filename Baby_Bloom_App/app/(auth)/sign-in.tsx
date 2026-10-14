@@ -1,83 +1,71 @@
-import { useState } from 'react';
-import { Platform, View } from 'react-native';
 import { Redirect } from 'expo-router';
-import { z } from 'zod';
-import { Button, Copy, Feedback, Field, Screen } from '../../src/components/ui';
+import { View, useWindowDimensions } from 'react-native';
+import { Card, Copy, Eyebrow, Heading, Screen } from '../../src/components/ui';
+import { HeartMark } from '../../src/components/motion';
+import { EmailAuthForm } from '../../src/features/email-auth';
 import { useStore } from '../../src/lib/store';
-import { supabase } from '../../src/lib/supabase';
-import type { TextKey } from '../../src/lib/i18n';
+import { useTheme } from '../../src/lib/theme';
+
 export default function SignIn() {
+  const theme = useTheme();
   const { t, session } = useStore();
-  const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
-  const [sent, setSent] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<TextKey | null>(null);
+  const { width } = useWindowDimensions();
+  const wide = width >= 900;
   if (session) return <Redirect href="/today" />;
-  const submit = async () => {
-    if (!supabase) {
-      setError('config_required');
-      return;
-    }
-    if (!z.email().safeParse(email.trim()).success) {
-      setError('invalid');
-      return;
-    }
-    setBusy(true);
-    setError(null);
-    try {
-      const response = sent
-        ? await supabase.auth.verifyOtp({ email: email.trim(), token: code.trim(), type: 'email' })
-        : await supabase.auth.signInWithOtp({
-            email: email.trim(),
-            options: {
-              emailRedirectTo:
-                Platform.OS === 'web'
-                  ? `${window.location.origin}/auth/callback`
-                  : 'babybloom://auth/callback',
-            },
-          });
-      if (response.error) setError('error');
-      else setSent(true);
-    } catch {
-      setError('error');
-    } finally {
-      setBusy(false);
-    }
-  };
   return (
-    <Screen title={t('sign_in')} back>
-      <View style={{ width: '100%', maxWidth: 520, alignSelf: 'center', gap: 20 }}>
-        <Field
-          label={t('email')}
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          autoComplete="email"
-          editable={!sent}
-        />
-        {sent && (
-          <>
-            <Copy>{t('check_email')}</Copy>
-            <Field
-              label={t('code')}
-              value={code}
-              onChangeText={setCode}
-              keyboardType="number-pad"
-              autoComplete="one-time-code"
-            />
-          </>
-        )}
-        {error && <Feedback message={t(error)} />}
-        <Button
-          title={t(sent ? 'verify' : 'send_code')}
-          onPress={() => {
-            void submit();
+    <Screen back>
+      <View
+        style={{
+          flexDirection: wide ? 'row' : 'column',
+          gap: wide ? 64 : 28,
+          paddingVertical: wide ? 24 : 0,
+          alignItems: wide ? 'center' : 'stretch',
+        }}
+      >
+        <View style={{ flex: wide ? 1 : undefined, gap: 20 }}>
+          <Eyebrow>{t('connected_diary')}</Eyebrow>
+          <View>
+            <Heading
+              style={{ fontSize: wide ? 60 : 38, lineHeight: wide ? 68 : 46, letterSpacing: -1.8 }}
+            >
+              {t('auth_lead')}
+            </Heading>
+            <Heading
+              style={{
+                fontSize: wide ? 60 : 38,
+                lineHeight: wide ? 68 : 46,
+                letterSpacing: -1.8,
+                color: theme.color.brand,
+              }}
+            >
+              {t('auth_accent')}
+            </Heading>
+          </View>
+          <Copy muted>{t('intro')}</Copy>
+          {wide && (
+            <View style={{ alignItems: 'flex-start' }}>
+              <HeartMark size={290} />
+            </View>
+          )}
+        </View>
+        <View
+          style={{
+            flex: wide ? 1 : undefined,
+            width: '100%',
+            maxWidth: wide ? 500 : undefined,
+            gap: 18,
           }}
-          disabled={busy}
-        />
-        <Copy muted>{t('privacy')}</Copy>
+        >
+          <Card>
+            <Eyebrow>{t('app')}</Eyebrow>
+            <Heading style={{ fontSize: 28, lineHeight: 36 }}>{t('auth_title')}</Heading>
+            <View style={{ height: 1, backgroundColor: theme.color.border, marginVertical: 6 }} />
+            <EmailAuthForm />
+          </Card>
+          <Copy muted style={{ fontSize: 12, lineHeight: 19 }}>
+            {t('privacy')}
+          </Copy>
+        </View>
       </View>
     </Screen>
   );

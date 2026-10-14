@@ -23,6 +23,7 @@ type Store = {
   session: Session | null;
   error: TextKey | null;
   online: boolean;
+  journalReady: boolean;
   babies: Baby[];
   baby: Baby | null;
   events: SavedEvent[];
@@ -64,6 +65,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const worker = useRef(new SyncWorker());
   const net = Network.useNetworkState();
   const online = net.isConnected === true && net.isInternetReachable !== false;
+  const [journalReady, setJournalReady] = useState(false);
+  useEffect(() => {
+    if (!session || !online || !supabase) return;
+    let active = true;
+    void supabase.rpc('journal_schema_version').then(({ data, error }) => {
+      if (active && !error) setJournalReady(data === 3);
+    });
+    return () => {
+      active = false;
+    };
+  }, [session, online]);
   const baby = babies.find((b) => b.id === selected) ?? babies[0] ?? null;
   const selectedBabyId = baby?.id;
   useEffect(() => {
@@ -242,6 +254,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   ) => {
     if (!local || !session || local.ownerId !== owner.current || event.baby_id !== baby?.id)
       throw new Error('unauthorized');
+    if (
+      !journalReady &&
+      (['meal', 'measurement', 'checkin'].includes(event.event_type) ||
+        (event.event_type === 'feeding' && event.detail.nutrition))
+    )
+      throw new Error('backend_update_required');
     validateEvent(event, new Date(), futureConfirmed);
     await local.save(
       event,
@@ -264,6 +282,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     session,
     error,
     online,
+    journalReady,
     babies,
     baby,
     events: events.filter((event) => event.baby_id === baby?.id),

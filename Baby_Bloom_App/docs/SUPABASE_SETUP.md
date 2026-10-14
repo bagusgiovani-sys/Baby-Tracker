@@ -1,6 +1,6 @@
 # Supabase setup for BabyBloom on Vercel
 
-Follow these steps when you are ready to connect the backend. The app is not deployed yet. Having a Supabase account is the first step; you also need a project, its database schema, and login configuration. No Docker installation is needed for this dashboard-based route.
+The app is deployed at `https://baby-bloom-gio.vercel.app`. Hosting verification does not verify email login: the Supabase project's database schema, authentication redirects, email templates and sender must also be configured. No Docker installation is needed for this dashboard-based route.
 
 ## 1. Create the project
 
@@ -28,7 +28,7 @@ You do not need to give the browser app your database password, personal access 
 
 In **Authentication**, open the email provider configuration and ensure Email and new-user signup are enabled. Keep email confirmation enabled.
 
-The hosted dashboard may show **Set up custom SMTP to edit templates**. If it does, editing is unavailable until SMTP is configured. For the quickest team-account test, keep the default templates and use the emailed magic link instead of a numeric code. The app has a callback route for that flow; open the link in the same browser and on the same device where you requested it. Full remote authentication verification remains pending deployment. Numeric OTP requires a template that actually includes the token.
+The hosted dashboard may show **Set up custom SMTP to edit templates**. If it does, editing is unavailable until SMTP is configured. For the quickest team-account test, keep the default templates and use the emailed magic link instead of a numeric code. Complete step 6 before requesting that email. The app has a callback route for that flow; open the link in the same browser and on the same device where you requested it. Full remote authentication verification remains pending. Numeric OTP requires a template that actually includes the token.
 
 Open **Email Templates** and select **Magic Link / OTP**. Make sure the message body contains the following so the app can accept a code:
 
@@ -47,10 +47,10 @@ For initial testing, the default email sender only accepts addresses belonging t
 
 In the Vercel project's **Settings > Environment Variables**, add these exact names:
 
-| Variable | Value |
-| --- | --- |
-| EXPO_PUBLIC_SUPABASE_URL | Your HTTPS Project URL, such as `https://your-project.supabase.co` |
-| EXPO_PUBLIC_SUPABASE_ANON_KEY | Your publishable key |
+| Variable                      | Value                                                              |
+| ----------------------------- | ------------------------------------------------------------------ |
+| EXPO_PUBLIC_SUPABASE_URL      | Your HTTPS Project URL, such as `https://your-project.supabase.co` |
+| EXPO_PUBLIC_SUPABASE_ANON_KEY | Your publishable key                                               |
 
 The second variable keeps its existing name even when its value is a publishable key. Select Production, and Preview if those deployments should use the same test backend. Save the settings and deploy/redeploy. Settings are compiled into the web app, so saving them alone does not update an existing deployment.
 
@@ -60,10 +60,10 @@ The app's Vercel root is the folder containing package.json and vercel.json. Bui
 
 After Vercel provides the stable deployed URL, open Supabase **Authentication > URL Configuration**:
 
-- **Site URL:** `https://your-app.vercel.app`
-- **Redirect URLs:** add `https://your-app.vercel.app/auth/callback`
+- **Site URL:** `https://baby-bloom-gio.vercel.app`
+- **Redirect URLs:** add `https://baby-bloom-gio.vercel.app/auth/callback`
 
-Replace both examples with the actual Vercel address and save. Add the exact callback of any preview you intend to test. Existing native callbacks can remain. See [Supabase redirect configuration](https://supabase.com/docs/guides/auth/redirect-urls).
+Save both settings. If the production domain changes, update both addresses. Add the exact callback of any preview you intend to test. Existing native callbacks can remain. An email link returning to `http://localhost:3000` indicates a redirect configuration or template problem; inspect Site URL, the callback allowlist, and any template that hardcodes SiteURL instead of respecting RedirectTo. The app requests its current origin plus `/auth/callback`. After changing settings, request a new email from the production app and open it in the same browser; previously generated links retain their original destination. These hosted Auth changes do not require a Vercel rebuild. See [Supabase redirect configuration](https://supabase.com/docs/guides/auth/redirect-urls).
 
 ## 7. Test from your phone
 

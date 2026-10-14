@@ -292,7 +292,7 @@ test('PostgreSQL migrations, RLS, transactional mutations, and concurrency contr
           "select relname,relrowsecurity from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r'",
         )
       ).rows;
-      assert.equal(rows.length, 12);
+      assert.equal(rows.length, 17);
       assert.ok(rows.every((r) => r.relrowsecurity));
       assert.ok(
         (

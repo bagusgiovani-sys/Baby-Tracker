@@ -66,6 +66,74 @@ const accepted = (m: Mutation, version = 1): SavedEvent => ({
   deleted_at: m.operation === 'delete' ? now.toISOString() : null,
   sync_status: 'synced',
 });
+test('food and daily check-ins survive offline reopen with their original expected versions and account scope', async () => {
+  const folder = await mkdtemp(join(tmpdir(), 'babybloom-journal-test-'));
+  const file = join(folder, 'journal.db');
+  let db = new DatabaseSync(file);
+  try {
+    let local = new LocalRepository(driver(db), owner);
+    await local.initialize();
+    await local.setBabies([baby]);
+    const meal: CareEvent = {
+      ...feed(),
+      event_type: 'meal',
+      detail: {
+        food_name: 'Synthetic meal',
+        ingredients: 'Synthetic ingredients',
+        portion_offered: 60,
+        portion_consumed: 40,
+        portion_unit: 'g',
+        texture: 'puree',
+        first_exposure: 'yes',
+        reaction: 'not_observed',
+        nutrition: {
+          source: 'Synthetic label',
+          calories_kcal: 25,
+          protein_g: 1,
+          carbs_g: null,
+          fat_g: 0,
+          fiber_g: null,
+          iron_mg: null,
+          calcium_mg: null,
+        },
+      },
+    };
+    await local.save(meal, uuid(100), 'create', false, now);
+    const checkin: CareEvent = {
+      ...feed(11),
+      event_type: 'checkin',
+      detail: {
+        local_day: '2026-01-02',
+        timezone_at_entry: baby.timezone,
+        state: 'completed',
+        overall: 'usual',
+        feeding_vs_usual: 'not_answered',
+        wet_diapers_vs_usual: 'not_answered',
+        sleep_concern: 'not_answered',
+        new_symptoms: 'not_answered',
+        parent_concern: null,
+      },
+    };
+    await local.save(checkin, uuid(101), 'create', false, now);
+    db.close();
+    db = new DatabaseSync(file);
+    local = new LocalRepository(driver(db), owner);
+    await local.initialize();
+    assert.equal((await local.pending()).length, 2);
+    const entries = await local.events(baby.id);
+    assert.deepEqual(entries.find((e) => e.event_type === 'meal')?.detail, meal.detail);
+    assert.deepEqual(entries.find((e) => e.event_type === 'checkin')?.detail, checkin.detail);
+    assert.ok(
+      (await local.pending()).every((m) => m.expected_version === 0 && m.status === 'queued'),
+    );
+    const unrelated = new LocalRepository(driver(db), uuid(3));
+    await unrelated.initialize();
+    assert.deepEqual(await unrelated.events(baby.id), []);
+  } finally {
+    db.close();
+    await unlink(file);
+  }
+});
 test('SQLite event+queue survive actual database close/reopen and recover syncing', async () => {
   const folder = await mkdtemp(join(tmpdir(), 'babybloom-test-'));
   const file = join(folder, 'test.db');

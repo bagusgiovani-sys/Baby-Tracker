@@ -9,16 +9,21 @@ import {
   Feedback,
   Heading,
   Screen,
-  styles,
+  useUIStyles,
+  Eyebrow,
 } from '../../../src/components/ui';
 import { EventCard } from '../../../src/components/event-card';
+import { CareIcon } from '../../../src/components/motion';
 import { useStore } from '../../../src/lib/store';
 import { summarize } from '../../../src/domain/totals';
 import { ageOn, dayKey, dayRange } from '../../../src/domain/time';
 import type { CareEvent } from '../../../src/domain/events';
-import { theme } from '../../../src/lib/theme';
+import { useTheme } from '../../../src/lib/theme';
 import { errorKey, type TextKey } from '../../../src/lib/i18n';
+import { DailyCheckin } from '../../../src/features/daily-checkin';
 export default function Today() {
+  const styles = useUIStyles();
+  const theme = useTheme();
   const store = useStore();
   const { t, baby, events, online, busy } = store;
   const { width } = useWindowDimensions();
@@ -66,24 +71,41 @@ export default function Today() {
     await store.save({ ...payload, ended_at: new Date().toISOString() } as CareEvent, 'update');
   };
   const tiles = [
-    { label: 'feeding' as const, value: totals.feeding_count, tint: theme.color.peach, icon: '◡' },
-    { label: 'wet_diapers' as const, value: totals.wet_count, tint: theme.color.blue, icon: '◇' },
+    {
+      label: 'feeding' as const,
+      value: totals.feeding_count,
+      tint: theme.color.peach,
+      icon: 'feeding' as const,
+    },
+    {
+      label: 'wet_diapers' as const,
+      value: totals.wet_count,
+      tint: theme.color.blue,
+      icon: 'diaper' as const,
+    },
     {
       label: 'sleep' as const,
       value: totals.sleep_minutes === null ? null : +(totals.sleep_minutes / 60).toFixed(1),
       tint: theme.color.mint,
-      icon: '☾',
+      icon: 'sleep' as const,
     },
-    { label: 'dirty_diapers' as const, value: totals.dirty_count, tint: '#EEE8E1', icon: '◌' },
+    {
+      label: 'dirty_diapers' as const,
+      value: totals.dirty_count,
+      tint: theme.color.paper,
+      icon: 'diaper' as const,
+    },
   ];
   return (
     <Screen>
       {actionError && <Feedback message={t(actionError)} />}
-      <View style={{ gap: 8 }}>
-        <Copy muted>{t('hello')}</Copy>
-        <Heading>{baby.nickname}</Heading>
+      <Card tint={theme.color.mint}>
+        <Eyebrow>{t('your_day')}</Eyebrow>
+        <Heading style={{ fontSize: width >= 900 ? 48 : 36, lineHeight: width >= 900 ? 58 : 44 }}>
+          {baby.nickname}
+        </Heading>
         <Copy muted>
-          {age.months} {t('months')} ? {age.days} {t('days')}
+          {age.months} {t('months')} · {age.days} {t('days')}
         </Copy>
         <Copy muted>
           {new Intl.DateTimeFormat(store.locale, {
@@ -96,7 +118,8 @@ export default function Today() {
           {busy ? t('syncing') : online ? t('online') : t('offline')}
           {pending ? ` · ${pending} ${t('queued')}` : ''}
         </Copy>
-      </View>
+      </Card>
+      <Eyebrow>{t('care_overview')}</Eyebrow>
       <Choice
         label={t('based_on')}
         value={rolling}
@@ -107,14 +130,14 @@ export default function Today() {
         ]}
       />
       <View style={styles.row}>
-        {tiles.map((tile) => (
+        {tiles.map((tile, index) => (
           <View key={tile.label} style={{ width: width >= 900 ? '23%' : '47%', flexGrow: 1 }}>
-            <Card tint={tile.tint}>
-              <Text style={{ fontSize: 27, color: theme.color.ink }}>{tile.icon}</Text>
+            <Card tint={tile.tint} delay={index * 0.07}>
+              <CareIcon kind={tile.icon} />
               <Copy>{t(tile.label)}</Copy>
               <Text
                 style={{
-                  fontSize: tile.value === null ? 16 : 30,
+                  fontSize: tile.value === null ? 16 : 40,
                   fontWeight: '700',
                   color: theme.color.ink,
                 }}
@@ -132,12 +155,13 @@ export default function Today() {
       >
         <View style={{ flex: width >= 900 ? 0.9 : undefined, gap: 20 }}>
           <Card>
-            <Text style={styles.label}>{t('quick')}</Text>
+            <Eyebrow>{t('quick')}</Eyebrow>
+            <Copy muted>{t('quick_description')}</Copy>
             {baby.role === 'viewer' ? (
               <Copy>{t('viewer')}</Copy>
             ) : (
               <View style={styles.row}>
-                {(['feeding', 'diaper', 'sleep'] as const).map((kind) => (
+                {(['feeding', 'diaper', 'sleep', 'meal'] as const).map((kind) => (
                   <View key={kind} style={{ flexGrow: 1, minWidth: 100 }}>
                     <Button
                       title={t(kind)}
@@ -177,7 +201,13 @@ export default function Today() {
             )}
             <Copy muted>{t('breast_note')}</Copy>
           </Card>
-          <Copy muted>{t('checkin_pending')}</Copy>
+          <Button
+            secondary
+            title={t('meal') + ' / ' + t('poop_journal')}
+            onPress={() => router.push('/journals')}
+          />
+          <Button secondary title={t('reports')} onPress={() => router.push('/reports')} />
+          <DailyCheckin />
           <Copy muted>{t('disclaimer')}</Copy>
         </View>
         <View style={{ flex: width >= 900 ? 1.1 : undefined, gap: 16 }}>

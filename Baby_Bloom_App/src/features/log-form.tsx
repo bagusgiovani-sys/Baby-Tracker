@@ -12,7 +12,7 @@ import {
   Feedback,
   Field,
   Screen,
-  styles,
+  useUIStyles,
 } from '../components/ui';
 import { EventDescription } from '../components/event-card';
 import { TimestampField } from '../components/timestamp-field';
@@ -23,13 +23,14 @@ import {
   feedingKinds,
   observations,
   sides,
-  stoolColors,
   validateEvent,
-  type CareEvent,
   type SavedEvent,
 } from '../domain/events';
 import { dayKey } from '../domain/time';
 import { errorKey, type TextKey } from '../lib/i18n';
+import { NutritionFields, nutritionDraft, parseNutrition } from './nutrition-fields';
+import { id as dictionary } from '../lib/i18n';
+import { StoolColorChoice } from '../components/stool-color-choice';
 const numberOrNull = (text: string) => (text.trim() ? Number(text.replace(',', '.')) : null);
 type DetailKey =
   | 'feeding_kind'
@@ -71,12 +72,21 @@ function ConflictDetails({ event }: { event: SavedEvent }) {
       <EventDescription event={event} />
       {Object.entries(event.detail).map(([key, value]) => (
         <Copy key={key}>
-          {t(labels[key as DetailKey])}:{' '}
+          {labels[key as DetailKey]
+            ? t(labels[key as DetailKey])
+            : key in dictionary
+              ? t(key as TextKey)
+              : key}
+          :{' '}
           {value === null
             ? t('not_recorded')
             : typeof value === 'number'
               ? value
-              : t(value as TextKey)}
+              : typeof value === 'string' && value in dictionary
+                ? t(value as TextKey)
+                : typeof value === 'object'
+                  ? JSON.stringify(value)
+                  : String(value)}
         </Copy>
       ))}
     </Card>
@@ -139,9 +149,10 @@ export function LogForm({
   kind,
   existing,
 }: {
-  kind: CareEvent['event_type'];
+  kind: 'feeding' | 'diaper' | 'sleep';
   existing?: SavedEvent;
 }) {
+  const styles = useUIStyles();
   const store = useStore();
   const { t, baby } = store;
   const [id] = useState(existing?.id ?? Crypto.randomUUID());
@@ -164,6 +175,9 @@ export function LogForm({
     existing?.event_type === 'feeding' && existing.detail.volume_consumed_ml !== null
       ? String(existing.detail.volume_consumed_ml)
       : '',
+  );
+  const [nutrition, setNutrition] = useState(() =>
+    nutritionDraft(existing?.event_type === 'feeding' ? existing.detail.nutrition : null),
   );
   const [diaper, setDiaper] = useState<string | null>(
     existing?.event_type === 'diaper' ? existing.detail.diaper_kind : 'wet',
@@ -226,6 +240,9 @@ export function LogForm({
             breast_side: feeding === 'direct_breast' ? side : null,
             volume_offered_ml: feeding === 'direct_breast' ? null : numberOrNull(offered),
             volume_consumed_ml: feeding === 'direct_breast' ? null : numberOrNull(consumed),
+            ...(feeding !== 'direct_breast' && nutrition.enabled
+              ? { nutrition: parseNutrition(nutrition) }
+              : {}),
           }
         : kind === 'diaper'
           ? {
@@ -341,12 +358,21 @@ export function LogForm({
                   keyboardType="decimal-pad"
                   error={errors.volume_consumed_ml}
                 />
+                {store.journalReady && (
+                  <NutritionFields value={nutrition} onChange={setNutrition} />
+                )}
               </>
             )}
           </>
         )}
         {kind === 'diaper' && (
           <>
+            <Copy muted>{t('poop_hint')}</Copy>
+            {dirty &&
+              (color === 'pale_white_grey' ||
+                color === 'red' ||
+                color === 'black' ||
+                blood === 'yes') && <Feedback message={t('poop_attention')} />}
             <Choice
               label={t('diaper_kind')}
               value={diaper}
@@ -355,12 +381,7 @@ export function LogForm({
             />
             {dirty && (
               <>
-                <Choice
-                  label={t('stool_color')}
-                  value={color}
-                  onChange={setColor}
-                  choices={choices(stoolColors)}
-                />
+                <StoolColorChoice value={color} onChange={setColor} />
                 <Choice
                   label={t('stool_consistency')}
                   value={consistency}

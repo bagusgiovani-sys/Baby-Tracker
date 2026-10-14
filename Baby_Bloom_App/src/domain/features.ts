@@ -1,7 +1,7 @@
 // Clinical capabilities are opt-in only after the spec's independent reviews.
 export const features = {
   coreTracking: true,
-  dailyCheckins: false,
+  dailyCheckins: true,
   symptoms: false,
   photos: false,
   growthPercentiles: false,
