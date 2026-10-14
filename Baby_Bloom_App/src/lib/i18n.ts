@@ -1,4 +1,11 @@
 export const id = {
+  continue_diary: 'Lanjut ke catatan saya',
+  back_to_welcome: 'Kembali ke halaman awal',
+  diary_load_failed: 'Catatan belum dapat dibuka',
+  diary_load_help:
+    'Profil atau penyimpanan perangkat belum dapat dimuat. Coba lagi atau kembali ke halaman awal.',
+  offline_profile_unavailable:
+    'Profil belum tersimpan di perangkat ini. Sambungkan internet, lalu coba lagi.',
   not_synced: 'catatan belum tersinkron',
   report_conflicts:
     'Catatan konflik tidak dihitung. Tinjau di Riwayat sebelum menyusun insight AI.',
@@ -377,6 +384,12 @@ export const id = {
 export type TextKey = keyof typeof id;
 export type Locale = 'id-ID' | 'en';
 export const en: Record<TextKey, string> = {
+  continue_diary: 'Continue to my diary',
+  back_to_welcome: 'Back to Welcome',
+  diary_load_failed: 'Your diary could not open',
+  diary_load_help: 'Your profile or device storage could not load. Try again or return to Welcome.',
+  offline_profile_unavailable:
+    'No profile is cached on this device yet. Connect to the internet and try again.',
   not_synced: 'entries not yet synced',
   report_conflicts:
     'Conflicted entries are excluded. Review them in History before generating AI insights.',

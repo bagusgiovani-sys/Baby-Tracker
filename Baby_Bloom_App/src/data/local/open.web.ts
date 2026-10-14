@@ -15,6 +15,9 @@ export function openLocal(): Promise<SqlDriver> {
       payloadCipher(key),
       async (work) => await navigator.locks.request('babybloom-storage', work),
     );
-  })();
+  })().catch((error) => {
+    opening = undefined;
+    throw error;
+  });
   return opening;
 }

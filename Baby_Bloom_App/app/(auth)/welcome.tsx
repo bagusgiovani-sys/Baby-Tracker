@@ -7,7 +7,7 @@ import { useTheme } from '../../src/lib/theme';
 
 export default function Welcome() {
   const theme = useTheme();
-  const { t } = useStore();
+  const { t, session } = useStore();
   const { width } = useWindowDimensions();
   const wide = width >= 900;
   const features = [
@@ -16,7 +16,7 @@ export default function Welcome() {
     { label: 'sleep' as const, body: 'feature_sleep' as const },
   ];
   return (
-    <Screen>
+    <Screen showStoreError={false}>
       <View style={{ gap: 36 }}>
         <View
           style={{
@@ -61,7 +61,10 @@ export default function Welcome() {
               </Copy>
             </MotionSurface>
             <View style={{ width: '100%', maxWidth: 300 }}>
-              <Button title={`${t('get_started')}  ↗`} onPress={() => router.push('/sign-in')} />
+              <Button
+                title={`${t(session ? 'continue_diary' : 'get_started')}  ↗`}
+                onPress={() => router.push(session ? '/today' : '/sign-in')}
+              />
             </View>
             <Copy muted style={{ fontSize: 13 }}>
               {t('auth_title')} · {t('version')}

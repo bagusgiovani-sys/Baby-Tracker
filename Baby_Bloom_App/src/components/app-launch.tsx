@@ -3,7 +3,7 @@ import { LaunchTransition } from './launch-motion';
 import { useStore } from '../lib/store';
 export const INTRO_DURATION_MS = 2200;
 export function AppLaunch({ children }: { children: ReactNode }) {
-  const { ready, t } = useStore();
+  const { authReady, t } = useStore();
   const [elapsed, setElapsed] = useState(false);
   useEffect(() => {
     const timer = setTimeout(() => setElapsed(true), INTRO_DURATION_MS);
@@ -11,7 +11,7 @@ export function AppLaunch({ children }: { children: ReactNode }) {
   }, []);
   return (
     <LaunchTransition
-      visible={!elapsed || !ready}
+      visible={!elapsed || !authReady}
       greeting={t('splash_greeting')}
       subtitle={t('splash_subtitle')}
     >

@@ -277,11 +277,13 @@ export function Screen({
   children,
   title,
   back = false,
+  showStoreError = true,
   footer,
 }: {
   children: React.ReactNode;
   title?: string;
   back?: boolean;
+  showStoreError?: boolean;
   footer?: React.ReactNode;
 }) {
   const theme = useTheme();
@@ -329,7 +331,7 @@ export function Screen({
                   )}
                 </View>
                 {title && <Heading>{title}</Heading>}
-                {error && <Feedback message={t(error)} />}
+                {showStoreError && error && <Feedback message={t(error)} />}
                 <View style={{ gap: 24 }}>
                   {Children.toArray(children).map((child, index) => (
                     <MotionSurface

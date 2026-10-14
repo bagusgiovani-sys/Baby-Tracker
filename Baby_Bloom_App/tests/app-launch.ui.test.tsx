@@ -6,7 +6,7 @@ import { translate as mockTranslate } from '../src/lib/i18n';
 let mockReady = true;
 jest.mock('../src/lib/store', () => ({
   useStore: () => ({
-    ready: mockReady,
+    authReady: mockReady,
     t: (key: Parameters<typeof mockTranslate>[1]) => mockTranslate('en', key),
   }),
 }));
@@ -43,7 +43,7 @@ test('startup greeting finishes once and does not replay on route content change
   expect(screen.getByText('second route')).toBeTruthy();
 });
 
-test('splash remains while initialization is pending, then opens the app without another intro delay', () => {
+test('splash remains while authentication is restoring, then opens the app without another intro delay', () => {
   mockReady = false;
   const screen = render(
     <AppLaunch>

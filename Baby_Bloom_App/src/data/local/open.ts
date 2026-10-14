@@ -26,6 +26,9 @@ export function openLocal(): Promise<SqlDriver> {
       throw new Error('encrypted_build_required');
     }
     return sqliteDriver(db);
-  })();
+  })().catch((error) => {
+    opening = undefined;
+    throw error;
+  });
   return opening;
 }

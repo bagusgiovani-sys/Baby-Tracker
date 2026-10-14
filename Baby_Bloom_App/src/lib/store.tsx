@@ -18,7 +18,9 @@ import {
 import { errorKey, translate, type Locale, type TextKey } from './i18n';
 import { readPreferences, writePreferences } from './preferences';
 type Store = {
+  authReady: boolean;
   ready: boolean;
+  profilesReady: boolean;
   busy: boolean;
   session: Session | null;
   error: TextKey | null;
@@ -57,6 +59,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [events, setEvents] = useState<SavedEvent[]>([]);
   const [syncErrors, setSyncErrors] = useState<Record<string, TextKey>>({});
   const [local, setLocal] = useState<LocalRepository | null>(null);
+  const [localAttempt, setLocalAttempt] = useState(0);
+  const [profilesReady, setProfilesReady] = useState(false);
   const [locale, setLocale] = useState<Locale>('id-ID');
   const [hour12, setHour12] = useState(false);
   const [preferencesReady, setPreferencesReady] = useState(false);
@@ -116,6 +120,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         setEvents([]);
         setSelected(null);
         setLocal(null);
+        setProfilesReady(false);
+        setJournalReady(false);
+        setBusy(false);
         setError(null);
       }
       setSession(value);
@@ -153,15 +160,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (active && owner.current === id) {
           setLocal(repo);
           setBabies(cached);
+          if (cached.length) setProfilesReady(true);
         }
       } catch (e) {
-        if (active) setError(errorKey(e));
+        if (active) {
+          const key = errorKey(e);
+          setError(key === 'error' ? 'storage_error' : key);
+        }
       }
     })();
     return () => {
       active = false;
     };
-  }, [session?.user.id]);
+  }, [session?.user.id, localAttempt]);
   const load = useCallback(async () => {
     if (!local || !selectedBabyId) {
       return;
@@ -188,14 +199,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const refresh = useCallback(async () => {
     if (!local || refreshing.current) return;
     refreshing.current = true;
+    setBusy(true);
     try {
       const permitted = online ? await listBabies() : await local.babies();
       if (owner.current !== local.ownerId) return;
-      setBusy(true);
+      if (!online && !permitted.length) throw new Error('offline_profile_unavailable');
       if (online) {
         await local.setBabies(permitted);
         setBabies(permitted);
       }
+      setProfilesReady(true);
       if (owner.current !== local.ownerId) return;
       await worker.current.run(local, remote, online, new Date());
       if (online)
@@ -277,7 +290,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [local],
   );
   const value: Store = {
+    authReady: ready,
     ready: ready && (!session || local !== null || error !== null),
+    profilesReady,
     busy,
     session,
     error,
@@ -298,6 +313,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     },
     refresh,
     retry: async () => {
+      setError(null);
+      if (!local) {
+        setLocalAttempt((attempt) => attempt + 1);
+        return;
+      }
       await local?.retry();
       await refresh();
     },
@@ -309,6 +329,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const updated = [...(await local.babies()), created];
       await local.setBabies(updated);
       setBabies(updated);
+      setProfilesReady(true);
       setSelected(created.id);
       await refresh();
     },
