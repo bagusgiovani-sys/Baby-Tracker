@@ -16,7 +16,17 @@ test('web storage shares an opening attempt, retries a rejection and reuses the 
   const locks = Object.getOwnPropertyDescriptor(navigator, 'locks');
   Object.defineProperty(globalThis, 'crossOriginIsolated', { configurable: true, value: true });
   Object.defineProperty(globalThis, 'crypto', { configurable: true, value: { subtle: {} } });
-  Object.defineProperty(navigator, 'locks', { configurable: true, value: { request: jest.fn() } });
+  Object.defineProperty(navigator, 'locks', {
+    configurable: true,
+    value: {
+      request: jest
+        .fn((_name, options, callback) => {
+          if (typeof options === 'function') return options();
+          return callback({ name: 'synthetic-owned-lease' });
+        })
+        .mockImplementationOnce((_name, _options, callback) => callback(null)),
+    },
+  });
   try {
     mockBrowserKey.mockResolvedValue({});
     mockOpenDatabase
@@ -26,7 +36,10 @@ test('web storage shares an opening attempt, retries a rejection and reuses the 
     const first = openLocal();
     const concurrent = openLocal();
     expect(first).toBe(concurrent);
-    await expect(first).rejects.toThrow('Synthetic transient SQLite failure');
+    await expect(first).rejects.toThrow('storage_in_use');
+    expect(mockOpenDatabase).not.toHaveBeenCalled();
+    expect(mockBrowserKey).not.toHaveBeenCalled();
+    await expect(openLocal()).rejects.toThrow('storage_database_unavailable');
     const recovered = await openLocal();
     expect(typeof recovered.transaction).toBe('function');
     expect(await openLocal()).toBe(recovered);

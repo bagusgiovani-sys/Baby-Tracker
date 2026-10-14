@@ -44,6 +44,8 @@ These decisions supplement the original product specifications. This delivery st
 
 ## Security and storage assumptions
 
+- STORAGE-004 / LOGIN-008 (2026-10-14): Expo SQLite's web OPFS access handles require a single active connection-owning document. Hold a document-lifetime Web Lock before opening the worker so a second tab cannot partially initialize and poison its VFS. A blocked tab may reopen after the owner closes; web recovery reloads previously failed workers. Preserve encryption, keys and queued data; do not clear storage or substitute plaintext. Welcome and email login remain available independently of diary initialization. Saved sessions do not automatically bypass email login; successful code verification/callback exchange explicitly enters the diary. Compact header controls use Eng | IND, an accessible Theme icon and a hamburger dropdown containing Settings.
+
 - Table grants, RLS and security-definer RPC checks work together. Clients cannot directly write protected tables or read mutation receipts. The service-role key is never part of client configuration. Invitation tables are present but server-managed; there is no invitation-sending flow yet.
 - Native SQLite requires SQLCipher in a custom development/release build. A random key is stored in SecureStore. All statements in a transaction use the same keyed connection. Expo Go does not satisfy this storage requirement.
 - Web SQLite payloads use AES-256-GCM with fresh nonces. Nonextractable keys and encrypted auth sessions are persisted in IndexedDB. Web Locks coordinate database operations across tabs; cross-origin isolation is required for SQLite WASM.

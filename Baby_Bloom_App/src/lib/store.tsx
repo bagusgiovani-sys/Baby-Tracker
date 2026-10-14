@@ -21,6 +21,8 @@ type Store = {
   authReady: boolean;
   ready: boolean;
   profilesReady: boolean;
+  signInVerified: boolean;
+  completeSignIn: () => void;
   busy: boolean;
   session: Session | null;
   error: TextKey | null;
@@ -61,6 +63,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [local, setLocal] = useState<LocalRepository | null>(null);
   const [localAttempt, setLocalAttempt] = useState(0);
   const [profilesReady, setProfilesReady] = useState(false);
+  const [signInVerified, setSignInVerified] = useState(false);
   const [locale, setLocale] = useState<Locale>('id-ID');
   const [hour12, setHour12] = useState(false);
   const [preferencesReady, setPreferencesReady] = useState(false);
@@ -121,6 +124,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         setSelected(null);
         setLocal(null);
         setProfilesReady(false);
+        setSignInVerified(false);
         setJournalReady(false);
         setBusy(false);
         setError(null);
@@ -285,6 +289,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     await load();
     void refresh();
   };
+  const completeSignIn = useCallback(() => {
+    setSignInVerified(true);
+    setError(null);
+    setLocalAttempt((attempt) => attempt + 1);
+  }, []);
   const serverConflict = useCallback(
     async (id: string) => local?.serverConflict(id) ?? null,
     [local],
@@ -293,6 +302,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     authReady: ready,
     ready: ready && (!session || local !== null || error !== null),
     profilesReady,
+    signInVerified,
+    completeSignIn,
     busy,
     session,
     error,

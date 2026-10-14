@@ -1,4 +1,19 @@
 export const id = {
+  home: 'Beranda',
+  menu: 'Menu',
+  open_menu: 'Buka menu',
+  close_menu: 'Tutup menu',
+  dismiss_menu: 'Tutup menu dengan menekan di luar',
+  language_eng: 'Eng',
+  language_ind: 'IND',
+  storage_browser_required:
+    'Penyimpanan catatan tidak tersedia dalam tampilan browser ini. Buka tautan langsung di tab Chrome, Edge, atau Safari biasa, lalu masuk.',
+  storage_browser_unsupported:
+    'Browser ini belum mendukung penyimpanan catatan yang aman. Gunakan browser terbaru dalam tab biasa.',
+  storage_in_use:
+    'Penyimpanan catatan sedang digunakan oleh tab BabyBloom lain. Tutup tab lain, lalu muat ulang tab ini.',
+  storage_database_unavailable:
+    'Browser tidak dapat membuka penyimpanan catatan. Pastikan penyimpanan situs diizinkan, lalu coba lagi.',
   continue_diary: 'Lanjut ke catatan saya',
   back_to_welcome: 'Kembali ke halaman awal',
   diary_load_failed: 'Catatan belum dapat dibuka',
@@ -384,6 +399,21 @@ export const id = {
 export type TextKey = keyof typeof id;
 export type Locale = 'id-ID' | 'en';
 export const en: Record<TextKey, string> = {
+  home: 'Home',
+  menu: 'Menu',
+  open_menu: 'Open menu',
+  close_menu: 'Close menu',
+  dismiss_menu: 'Dismiss menu',
+  language_eng: 'Eng',
+  language_ind: 'IND',
+  storage_browser_required:
+    'Diary storage is unavailable in this browser view. Open the link directly in a regular Chrome, Edge, or Safari tab, then sign in.',
+  storage_browser_unsupported:
+    'This browser does not support secure diary storage. Use an updated browser in a regular tab.',
+  storage_in_use:
+    'Another BabyBloom tab is using diary storage. Close the other tabs, then reload this tab.',
+  storage_database_unavailable:
+    'The browser could not open diary storage. Allow site storage, then try again.',
   continue_diary: 'Continue to my diary',
   back_to_welcome: 'Back to Welcome',
   diary_load_failed: 'Your diary could not open',

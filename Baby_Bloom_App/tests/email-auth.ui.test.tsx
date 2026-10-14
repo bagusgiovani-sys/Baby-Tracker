@@ -68,6 +68,23 @@ test('one email flow explicitly supports account creation and verification; dupl
     type: 'email',
   });
 });
+
+test('navigation after sign-in occurs only after successful code verification', async () => {
+  const verified = jest.fn();
+  render(<EmailAuthForm onVerified={verified} />);
+  await requestEmail();
+  expect(verified).not.toHaveBeenCalled();
+  fireEvent.changeText(screen.getByLabelText('Code from your email'), '123456');
+  mockVerify.mockResolvedValueOnce({ error: { code: 'otp_expired' } });
+  await act(async () => {
+    fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
+  });
+  expect(verified).not.toHaveBeenCalled();
+  await act(async () => {
+    fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
+  });
+  expect(verified).toHaveBeenCalledTimes(1);
+});
 test('failed resend preserves the entered code and permits retry instead of falsely reporting delivery', async () => {
   render(<EmailAuthForm />);
   await requestEmail();

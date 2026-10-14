@@ -7,7 +7,7 @@ export default function Callback() {
   const { code } = useLocalSearchParams<{
     code?: string;
   }>();
-  const { t } = useStore();
+  const { t, completeSignIn } = useStore();
   const [failed, setFailed] = useState(false);
   useEffect(() => {
     if (!code || !supabase || Array.isArray(code)) {
@@ -19,7 +19,10 @@ export default function Callback() {
       .then(({ error }) => {
         if (!active) return;
         if (error) setFailed(true);
-        else router.replace('/today');
+        else {
+          completeSignIn();
+          router.replace('/today');
+        }
       })
       .catch(() => {
         if (active) setFailed(true);
@@ -27,7 +30,7 @@ export default function Callback() {
     return () => {
       active = false;
     };
-  }, [code]);
+  }, [code, completeSignIn]);
   return failed || !code || !supabase || Array.isArray(code) ? (
     <Screen>
       <Copy>{t('error')}</Copy>

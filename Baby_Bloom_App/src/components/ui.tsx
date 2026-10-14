@@ -310,26 +310,19 @@ export function Screen({
           <View style={styles.container}>
             <MotionPage cycle={cycle}>
               <View style={{ gap: 24 }}>
-                <View style={{ alignSelf: 'flex-end' }}>
-                  {back ? (
+                {back && (
+                  <View style={{ alignSelf: 'flex-start' }}>
                     <Button
                       title={t('cancel')}
                       secondary
                       compact
                       onPress={() => {
                         if (router.canGoBack()) router.back();
-                        else router.replace('/today');
+                        else router.replace('/welcome');
                       }}
                     />
-                  ) : (
-                    <Button
-                      title={t('settings')}
-                      secondary
-                      compact
-                      onPress={() => router.push('/settings')}
-                    />
-                  )}
-                </View>
+                  </View>
+                )}
                 {title && <Heading>{title}</Heading>}
                 {showStoreError && error && <Feedback message={t(error)} />}
                 <View style={{ gap: 24 }}>

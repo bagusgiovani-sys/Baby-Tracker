@@ -3,6 +3,7 @@ import { fireEvent, render } from '@testing-library/react-native';
 import { router } from 'expo-router';
 import Index from '../app/index';
 import Welcome from '../app/(auth)/welcome';
+import SignIn from '../app/(auth)/sign-in';
 import AppLayout from '../app/(app)/_layout';
 import Today from '../app/(app)/(tabs)/today';
 import { translate, type TextKey } from '../src/lib/i18n';
@@ -23,6 +24,8 @@ let mockState = {
   ready: true,
   authReady: true,
   profilesReady: true,
+  signInVerified: false,
+  completeSignIn: jest.fn(),
   session: null as null | { access_token: string; user: { id: string } },
   baby: null as Baby | null,
   error: null as TextKey | null,
@@ -57,6 +60,7 @@ beforeEach(() => {
     baby: null,
     error: null,
     busy: false,
+    signInVerified: false,
   };
   mockRetry.mockClear();
   jest.mocked(router.push).mockClear();
@@ -74,7 +78,7 @@ test('opening the root always reaches Welcome, including a restored session or s
   }
 });
 
-test('Welcome signs out visitors into email sign-in and offers returning caregivers an explicit Continue', () => {
+test('Welcome opens email sign-in for visitors and returning caregivers', () => {
   const app = render(<Welcome />);
   fireEvent.press(app.getByRole('button', { name: /Get started/ }));
   expect(router.push).toHaveBeenLastCalledWith('/sign-in');
@@ -82,8 +86,23 @@ test('Welcome signs out visitors into email sign-in and offers returning caregiv
   mockState.error = 'error';
   app.rerender(<Welcome />);
   expect(app.queryByText(translate('en', 'error'))).toBeNull();
-  fireEvent.press(app.getByRole('button', { name: /Continue to my diary/ }));
-  expect(router.push).toHaveBeenLastCalledWith('/today');
+  fireEvent.press(app.getByRole('button', { name: /Get started/ }));
+  expect(router.push).toHaveBeenLastCalledWith('/sign-in');
+});
+
+test('Sign in stays accessible with a saved session and failed storage, instead of redirecting to Today', () => {
+  mockState.session = { access_token: 'synthetic', user: { id: 'synthetic' } };
+  mockState.error = 'storage_error';
+  const app = render(<SignIn />);
+  expect(app.getByLabelText('Email')).toBeTruthy();
+  expect(app.queryByText('Redirect: /today')).toBeNull();
+});
+
+test('failed startup with a restored session returns to sign-in before showing diary recovery', () => {
+  mockState.session = { access_token: 'synthetic', user: { id: 'synthetic' } };
+  mockState.error = 'storage_error';
+  const app = render(<AppLayout />);
+  expect(app.getByText('Redirect: /sign-in')).toBeTruthy();
 });
 
 test('protected routes redirect signed-out visitors and wait for initial profiles before onboarding', () => {
@@ -106,6 +125,7 @@ test('failed profile startup offers real Retry and Welcome recovery without logg
   mockState.session = { access_token: 'synthetic', user: { id: 'synthetic' } };
   mockState.profilesReady = false;
   mockState.error = 'error';
+  mockState.signInVerified = true;
   const app = render(<AppLayout />);
   expect(app.getByText('Your diary could not open')).toBeTruthy();
   fireEvent.press(app.getByRole('button', { name: 'Try again' }));

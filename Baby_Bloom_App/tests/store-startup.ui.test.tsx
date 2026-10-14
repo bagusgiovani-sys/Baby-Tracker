@@ -70,7 +70,15 @@ function Probe() {
       <Text>{store.authReady ? 'auth ready' : 'auth pending'}</Text>
       <Text>{store.ready ? 'storage ready' : 'storage pending'}</Text>
       <Text>{store.profilesReady ? 'profiles ready' : 'profiles pending'}</Text>
+      <Text>{store.signInVerified ? 'sign-in verified' : 'sign-in pending'}</Text>
       <Text>{store.error ?? 'no error'}</Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Verified sign-in"
+        onPress={store.completeSignIn}
+      >
+        <Text>Verified sign-in</Text>
+      </Pressable>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Retry"
@@ -157,6 +165,28 @@ test('a failed profile request can be retried and does not masquerade as an acco
   fireEvent.press(app.getByRole('button', { name: 'Retry' }));
   await waitFor(() => expect(app.getByText('profiles ready')).toBeTruthy());
   expect(app.getByText('no error')).toBeTruthy();
+});
+
+test('verified sign-in reopens failed diary storage and keeps its completion callback stable', async () => {
+  mockOpenLocal.mockRejectedValueOnce(new Error('storage_in_use'));
+  const completions: (() => void)[] = [];
+  function CompletionProbe() {
+    completions.push(useStore().completeSignIn);
+    return <Probe />;
+  }
+  const app = render(
+    <StoreProvider>
+      <CompletionProbe />
+    </StoreProvider>,
+  );
+  await waitFor(() => expect(app.getByText('storage_in_use')).toBeTruthy());
+  expect(app.getByText('sign-in pending')).toBeTruthy();
+  fireEvent.press(app.getByRole('button', { name: 'Verified sign-in' }));
+  await waitFor(() => expect(app.getByText('profiles ready')).toBeTruthy());
+  expect(app.getByText('sign-in verified')).toBeTruthy();
+  expect(app.getByText('no error')).toBeTruthy();
+  expect(mockOpenLocal).toHaveBeenCalledTimes(2);
+  expect(new Set(completions).size).toBe(1);
 });
 
 test('offline startup without a cached profile shows recovery instead of claiming onboarding is ready', async () => {

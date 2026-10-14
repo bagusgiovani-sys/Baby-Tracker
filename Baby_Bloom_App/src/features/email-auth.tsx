@@ -18,7 +18,7 @@ function authError(error: { code?: string; status?: number } | null, verifying: 
   return verifying ? 'auth_verify_failed' : 'auth_send_failed';
 }
 
-export function EmailAuthForm() {
+export function EmailAuthForm({ onVerified }: { onVerified?: () => void } = {}) {
   const styles = useUIStyles();
   const { t } = useStore();
   const [email, setEmail] = useState('');
@@ -110,6 +110,7 @@ export function EmailAuthForm() {
         type: 'email',
       });
       if (response.error) setError(authError(response.error, true));
+      else onVerified?.();
     } catch {
       setError('auth_verify_failed');
     } finally {

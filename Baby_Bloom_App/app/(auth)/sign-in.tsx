@@ -1,4 +1,4 @@
-import { Redirect } from 'expo-router';
+import { router } from 'expo-router';
 import { View, useWindowDimensions } from 'react-native';
 import { Card, Copy, Eyebrow, Heading, Screen } from '../../src/components/ui';
 import { HeartMark } from '../../src/components/motion';
@@ -8,12 +8,11 @@ import { useTheme } from '../../src/lib/theme';
 
 export default function SignIn() {
   const theme = useTheme();
-  const { t, session } = useStore();
+  const { t, completeSignIn } = useStore();
   const { width } = useWindowDimensions();
   const wide = width >= 900;
-  if (session) return <Redirect href="/today" />;
   return (
-    <Screen back>
+    <Screen back showStoreError={false}>
       <View
         style={{
           flexDirection: wide ? 'row' : 'column',
@@ -60,7 +59,12 @@ export default function SignIn() {
             <Eyebrow>{t('app')}</Eyebrow>
             <Heading style={{ fontSize: 28, lineHeight: 36 }}>{t('auth_title')}</Heading>
             <View style={{ height: 1, backgroundColor: theme.color.border, marginVertical: 6 }} />
-            <EmailAuthForm />
+            <EmailAuthForm
+              onVerified={() => {
+                completeSignIn();
+                router.replace('/today');
+              }}
+            />
           </Card>
           <Copy muted style={{ fontSize: 12, lineHeight: 19 }}>
             {t('privacy')}

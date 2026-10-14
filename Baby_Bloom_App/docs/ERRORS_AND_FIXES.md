@@ -2,6 +2,13 @@
 
 Last updated: 2026-10-14.
 
+## Latest login, header and storage recovery
+
+- LOGIN-008: A saved session redirected the email-login page to the same failed diary. Removed that redirect and the Welcome session bypass. Successful OTP verification/callback exchange explicitly enters Today and retries initialization; the completion callback remains stable across renders. Saved-session startup failure opens email login. Tests cover restored-session storage failure, successful-only verification callbacks and actual repository reopening.
+- HEADER-007: The language controls wrapped below the logo and Settings floated in screen content. Replaced the shared header with a single row: logo, accessible Theme icon, Eng | IND and hamburger dropdown with Settings. Removed the body Settings button. Actual anonymous Chrome navigation and measured widths 320/360/407/1280 pass; header height is 62px. Public screenshots contain no private records.
+- STORAGE-004: A fresh two-tab Chrome reproduction found exclusive OPFS access. The second Expo SQLite initialization failed after assigning its worker module, leaving VFS uninitialized; a plain retry still failed after closing the first tab. Added a document-lifetime ownership Web Lock before worker startup. Rebuilt-app Chrome testing confirms first-tab opening, explicit second-tab storage_in_use and successful second-tab opening after closing the first. Web recovery reloads previously poisoned workers. Encryption, keys and queued records are preserved; one active diary tab per origin is supported. The user's private account/storage was not inspected.
+- Validation: Full checks pass 109 cases (43 core/server/queue, 21 database, 45 UI), with a subsequently passing verified-sign-in/reopen/stable-callback regression case bringing coverage to 110. Guarded TypeScript export passes. The in-app browser connection still fails on missing sandboxPolicy metadata; the real-browser results above use a separately approved anonymous headless Chrome profile. Email delivery and authenticated AI generation remain unverified.
+
 This is the ongoing issue log. Record meaningful bugs, setup corrections and unresolved blockers here. A fix in source is not automatically a verified device or production fix. Initial entries below were reconstructed from this development session and its tests; no production incidents have been observed.
 
 Do not include credentials, infant records, caregiver emails, free-text notes or sensitive screenshots. Refer to synthetic examples, bounded error codes and files instead.
