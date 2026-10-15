@@ -41,6 +41,9 @@ export default function Settings() {
         />
         {session && (
           <>
+            {baby && (
+              <Button title={t('view_profile')} secondary onPress={() => router.push('/profile')} />
+            )}
             <Choice
               label={t('choose_baby')}
               value={baby?.id ?? null}

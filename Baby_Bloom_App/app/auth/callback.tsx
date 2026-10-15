@@ -21,7 +21,7 @@ export default function Callback() {
         if (error) setFailed(true);
         else {
           completeSignIn();
-          router.replace('/today');
+          router.replace('/home');
         }
       })
       .catch(() => {

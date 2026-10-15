@@ -12,7 +12,7 @@ export default function TabsLayout() {
         headerShown: false,
         lazy: true,
         animation: 'fade',
-        tabBarActiveTintColor: theme.color.brand,
+        tabBarActiveTintColor: theme.color.accentInk,
         tabBarInactiveTintColor: theme.color.muted,
         tabBarStyle: {
           backgroundColor: theme.color.paper,
@@ -36,7 +36,7 @@ export default function TabsLayout() {
             tabBarIcon: ({ color, focused }) => (
               <CareIcon
                 kind={name}
-                color={typeof color === 'string' ? color : theme.color.brand}
+                color={typeof color === 'string' ? color : theme.color.accentInk}
                 size={24}
                 active={focused}
               />

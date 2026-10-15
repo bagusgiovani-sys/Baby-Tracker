@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { ZodError } from 'zod';
@@ -34,18 +34,21 @@ export default function Onboarding() {
   const [sex, setSex] = useState<string | null>(null);
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
+  const submitting = useRef(false);
   const [error, setError] = useState<TextKey | null>(null);
   const [fields, setFields] = useState<Record<string, string>>({});
   if (!ready) return <Loading />;
   if (!session) return <Redirect href="/sign-in" />;
-  if (store.baby && add !== '1') return <Redirect href="/today" />;
+  if (store.baby && add !== '1') return <Redirect href="/home" />;
   const submit = async () => {
+    if (submitting.current) return;
     setError(null);
     setFields({});
     if (!online) {
-      setError('offline');
+      setError('profile_online_required');
       return;
     }
+    submitting.current = true;
     setBusy(true);
     try {
       const input = babySchema.parse({
@@ -58,21 +61,33 @@ export default function Onboarding() {
         guardian_confirmed: consent,
         policy_version: '2026-10-draft',
       });
-      if (birth > dayKey(new Date(), timezone)) throw new Error('birth_in_future');
+      if (birth > dayKey(new Date(), timezone)) {
+        setFields({ date_of_birth: t('birth_in_future') });
+        return;
+      }
       await store.addBaby(input);
-      router.replace('/today');
+      router.replace('/home');
     } catch (e) {
       if (e instanceof ZodError)
         setFields(
           Object.fromEntries(
             e.issues.map((issue) => [
               String(issue.path[0]),
-              t(issue.message === 'invalid_timezone' ? 'invalid_timezone' : 'invalid'),
+              t(
+                issue.path[0] === 'guardian_confirmed'
+                  ? 'consent_required'
+                  : issue.path[0] === 'date_of_birth'
+                    ? 'birth_date_invalid'
+                    : issue.message === 'invalid_timezone'
+                      ? 'invalid_timezone'
+                      : 'invalid',
+              ),
             ]),
           ),
         );
       else setError(errorKey(e));
     } finally {
+      submitting.current = false;
       setBusy(false);
     }
   };
@@ -147,14 +162,42 @@ export default function Onboarding() {
           </Pressable>
           {fields.guardian_confirmed && <Feedback message={t('consent_required')} />}
         </Card>
-        {error && <Feedback message={t(error)} />}
-        <Button
-          title={t('create_baby')}
-          onPress={() => {
-            void submit();
-          }}
-          disabled={busy}
-        />
+        <View style={{ gap: 12 }}>
+          {Object.keys(fields).length > 0 && (
+            <View testID="onboarding-errors" style={{ gap: 8 }}>
+              <Feedback message={t('profile_check_fields')} />
+              {Object.entries(fields).map(([field, message]) => (
+                <Feedback
+                  key={field}
+                  message={
+                    field === 'guardian_confirmed'
+                      ? message
+                      : `${t(
+                          (
+                            {
+                              nickname: 'nickname',
+                              date_of_birth: 'birth_date',
+                              timezone: 'timezone',
+                              gestation_weeks: 'gestation_weeks',
+                              gestation_days: 'gestation_days',
+                              growth_reference_sex: 'reference_sex',
+                            } as Record<string, TextKey>
+                          )[field] ?? 'invalid',
+                        )}: ${message}`
+                  }
+                />
+              ))}
+            </View>
+          )}
+          {error && <Feedback message={t(error)} />}
+          <Button
+            title={t(busy ? 'creating_baby' : 'create_baby')}
+            onPress={() => {
+              void submit();
+            }}
+            disabled={busy}
+          />
+        </View>
         <Copy muted>{t('disclaimer')}</Copy>
       </View>
     </Screen>

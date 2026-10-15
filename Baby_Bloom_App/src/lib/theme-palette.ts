@@ -1,4 +1,4 @@
-export const themeIds = ['neon', 'unicorn'] as const;
+export const themeIds = ['neon', 'unicorn', 'candy'] as const;
 export type ThemeId = (typeof themeIds)[number];
 export const themeGeometry = {
   radius: { card: 24, button: 14, input: 12 },
@@ -12,6 +12,7 @@ export const palettes = {
       ink: '#EDF5EF',
       muted: '#9AADA0',
       brand: '#ADFF70',
+      accentInk: '#ADFF70',
       onBrand: '#101B0B',
       border: '#283A2D',
       mint: '#17291B',
@@ -31,6 +32,7 @@ export const palettes = {
       ink: '#372348',
       muted: '#756080',
       brand: '#9333EA',
+      accentInk: '#9333EA',
       onBrand: '#FFFFFF',
       border: '#E7D6F6',
       mint: '#F8DDF0',
@@ -42,6 +44,26 @@ export const palettes = {
     dark: false,
     glow: '147,51,234',
     swatches: ['#F9A8D4', '#A78BFA', '#93C5FD', '#FFFFFF'],
+  },
+  candy: {
+    color: {
+      canvas: '#B9E6FF',
+      paper: '#A2DAFF',
+      ink: '#20375B',
+      muted: '#344C70',
+      brand: '#FF8FCB',
+      accentInk: '#21457A',
+      onBrand: '#4C2240',
+      border: '#6AAED9',
+      mint: '#FFC9E7',
+      peach: '#FFE1F0',
+      blue: '#6DC5FF',
+      warning: '#783410',
+      elevated: '#79CAFF',
+    },
+    dark: false,
+    glow: '73,179,255',
+    swatches: ['#FF8FCB', '#6DC5FF', '#A2DAFF', '#FFC9E7'],
   },
 } satisfies Record<
   ThemeId,
@@ -55,7 +77,7 @@ export function parseAppearance(value: string | null): Appearance | null {
     const p = parsed as Record<string, unknown>;
     return p.version === 1 &&
       p.chosen === true &&
-      (p.theme === 'neon' || p.theme === 'unicorn') &&
+      (p.theme === 'neon' || p.theme === 'unicorn' || p.theme === 'candy') &&
       typeof p.tutorialSeen === 'boolean'
       ? { version: 1, theme: p.theme, chosen: true, tutorialSeen: p.tutorialSeen }
       : null;

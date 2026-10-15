@@ -34,7 +34,7 @@ export default function SignIn() {
                 fontSize: wide ? 60 : 38,
                 lineHeight: wide ? 68 : 46,
                 letterSpacing: -1.8,
-                color: theme.color.brand,
+                color: theme.color.accentInk,
               }}
             >
               {t('auth_accent')}
@@ -62,7 +62,7 @@ export default function SignIn() {
             <EmailAuthForm
               onVerified={() => {
                 completeSignIn();
-                router.replace('/today');
+                router.replace('/home');
               }}
             />
           </Card>

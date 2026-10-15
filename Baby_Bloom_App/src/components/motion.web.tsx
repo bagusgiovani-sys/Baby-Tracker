@@ -75,7 +75,7 @@ export function AmbientBackground() {
       aria-hidden="true"
       style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}
     >
-      <style>{`html {  background: var(--bb-canvas, #060A08); } ::selection { background: var(--bb-brand, #ADFF70); color: #101B0B; } input:focus-visible, textarea:focus-visible, [role="button"]:focus-visible, [role="radio"]:focus-visible { outline: 2px solid var(--bb-brand, #ADFF70) !important; outline-offset: 4px; }`}</style>
+      <style>{`html {  background: var(--bb-canvas, #060A08); } ::selection { background: var(--bb-brand, #ADFF70); color: var(--bb-onBrand, #101B0B); } input:focus-visible, textarea:focus-visible, [role="button"]:focus-visible, [role="radio"]:focus-visible { outline: 2px solid var(--bb-accentInk, #ADFF70) !important; outline-offset: 4px; }`}</style>
       <div
         style={{
           position: 'absolute',
@@ -234,7 +234,7 @@ const iconPaths: Record<CareIconKind, string> = {
 export function CareIcon({
   kind,
   size = 30,
-  color = 'var(--bb-brand, #ADFF70)',
+  color = 'var(--bb-accentInk, #ADFF70)',
   active = false,
 }: {
   kind: CareIconKind;

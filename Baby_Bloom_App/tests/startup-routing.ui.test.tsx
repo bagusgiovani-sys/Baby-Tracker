@@ -80,6 +80,8 @@ test('opening the root always reaches Welcome, including a restored session or s
 
 test('Welcome opens email sign-in for visitors and returning caregivers', () => {
   const app = render(<Welcome />);
+  expect(app.getByText('Monitoring is')).toBeTruthy();
+  expect(app.getByText('Caring')).toBeTruthy();
   fireEvent.press(app.getByRole('button', { name: /Get started/ }));
   expect(router.push).toHaveBeenLastCalledWith('/sign-in');
   mockState.session = { access_token: 'synthetic', user: { id: 'synthetic' } };

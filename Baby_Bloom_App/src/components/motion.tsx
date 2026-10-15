@@ -128,7 +128,7 @@ export function CareIcon({
   const theme = useTheme();
   return (
     <Pulse>
-      <Text accessible={false} style={{ color: color ?? theme.color.brand, fontSize: size }}>
+      <Text accessible={false} style={{ color: color ?? theme.color.accentInk, fontSize: size }}>
         {glyphs[kind]}
       </Text>
     </Pulse>

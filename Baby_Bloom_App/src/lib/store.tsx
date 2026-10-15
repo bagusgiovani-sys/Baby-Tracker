@@ -342,7 +342,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setBabies(updated);
       setProfilesReady(true);
       setSelected(created.id);
-      await refresh();
+      // Selecting the new baby triggers background refresh. Profile creation
+      // must finish independently of unrelated diary downloads or queue retries.
     },
     serverConflict,
     resolve: async (id, choice) => {

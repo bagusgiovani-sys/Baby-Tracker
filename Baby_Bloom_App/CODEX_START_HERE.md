@@ -1,5 +1,11 @@
 # Paste this into Codex to start development
 
+Latest continuation (2026-10-15): final brighter Candy Princess revision, Home/Profile and onboarding repair pass full checks and guarded export. Read the top of `docs/RESUME_CHECKPOINT.md` for publication status; the older checkpoints below are historical.
+
+## Current checkpoint — profile creation repair 2026-10-15
+
+Work resumed after the user reported the baby-profile creation button failing. Read [docs/RESUME_CHECKPOINT.md](docs/RESUME_CHECKPOINT.md) and the latest ONBOARDING-011 entry in [docs/ERRORS_AND_FIXES.md](docs/ERRORS_AND_FIXES.md). Preserve existing Home/Profile changes. Source checks pass 130 cases; production deployment dpl_A17FPdaDQdZsyFG5S9SY6xT5U2jv is READY and its corrected onboarding chunk is verified over HTTPS; a live authenticated save is unverified. Git changes remain uncommitted and unpushed. The foundation sequence below is historical and should not restart completed work.
+
 You are the lead engineer for **BabyBloom**, a bilingual Indonesia-first mobile infant tracking app. Read `AGENTS.md`, `README.md`, and all `docs/*.md`, starting with `docs/02_DAILY_DATA_DICTIONARY.md` and `docs/09_IMPLEMENTATION_BACKLOG.md`. These files are the requirements. **Do not re-plan the product from scratch.**
 
 ## Objective

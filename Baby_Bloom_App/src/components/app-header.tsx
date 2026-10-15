@@ -7,13 +7,21 @@ import { useStore } from '../lib/store';
 import { useTheme, type AppTheme } from '../lib/theme';
 import { useAppearance } from '../lib/theme-state';
 import type { TextKey } from '../lib/i18n';
-type Destination = '/welcome' | '/sign-in' | '/today' | '/settings' | '/safety';
+type Destination =
+  | '/welcome'
+  | '/home'
+  | '/profile'
+  | '/sign-in'
+  | '/today'
+  | '/settings'
+  | '/safety';
 export function AppHeader() {
   const { t, locale, setLocale, session, baby } = useStore();
   const { width, height } = useWindowDimensions();
   const compact = width < 380;
   const styles = makeStyles(useTheme(), compact);
   const { openPicker } = useAppearance();
+  const home: Destination = session && baby ? '/home' : '/welcome';
   const pathname = usePathname();
   const [menuPath, setMenuPath] = useState<string | null>(null);
   const open = menuPath === pathname;
@@ -30,9 +38,12 @@ export function AppHeader() {
     router.push(path);
   };
   const items: { label: TextKey; path: Destination; icon: string }[] = [
-    { label: 'home', path: '/welcome', icon: '⌂' },
+    { label: 'home', path: home, icon: '⌂' },
     { label: 'sign_in', path: '/sign-in', icon: '↗' },
     ...(session && baby ? [{ label: 'today' as const, path: '/today' as const, icon: '♡' }] : []),
+    ...(session && baby
+      ? [{ label: 'baby_profile' as const, path: '/profile' as const, icon: '◉' }]
+      : []),
     { label: 'settings', path: '/settings', icon: '⚙' },
     { label: 'safety', path: '/safety', icon: '+' },
   ];
@@ -50,7 +61,7 @@ export function AppHeader() {
         <Pressable
           accessibilityRole="link"
           accessibilityLabel={t('home')}
-          onPress={() => navigate('/welcome')}
+          onPress={() => navigate(home)}
           style={styles.brand}
         >
           <CareIcon kind="development" size={compact ? 18 : 22} />
@@ -192,7 +203,7 @@ const makeStyles = (theme: AppTheme, compact: boolean) =>
       borderColor: theme.color.border,
       backgroundColor: theme.color.paper,
     },
-    themeIcon: { color: theme.color.brand, fontSize: 24 },
+    themeIcon: { color: theme.color.accentInk, fontSize: 24 },
     languages: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -215,7 +226,7 @@ const makeStyles = (theme: AppTheme, compact: boolean) =>
     selectedLabel: { color: theme.color.onBrand },
     burger: { gap: 4, width: 18 },
     burgerLine: { height: 2, borderRadius: 1, backgroundColor: theme.color.ink },
-    menuActive: { borderColor: theme.color.brand },
+    menuActive: { borderColor: theme.color.accentInk },
     backdrop: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: 'transparent' },
     menu: { position: 'absolute', top: 66, right: 12, width: 248, maxWidth: '90%', zIndex: 110 },
     menuPanel: {
@@ -244,7 +255,7 @@ const makeStyles = (theme: AppTheme, compact: boolean) =>
       borderRadius: 12,
     },
     menuPressed: { backgroundColor: theme.color.elevated },
-    menuIcon: { color: theme.color.brand, fontSize: 20, width: 24 },
+    menuIcon: { color: theme.color.accentInk, fontSize: 20, width: 24 },
     menuLabel: { color: theme.color.ink, fontSize: 14, fontWeight: '600', flex: 1 },
     arrow: { color: theme.color.muted, fontSize: 16 },
   });

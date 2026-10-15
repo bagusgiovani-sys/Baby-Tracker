@@ -24,7 +24,7 @@ function ThemeCards({
           <MotionSurface key={id} delay={index * 0.1} hover>
             <Pressable
               accessibilityRole="radio"
-              accessibilityLabel={t(id === 'neon' ? 'theme_neon' : 'theme_unicorn')}
+              accessibilityLabel={t(`theme_${id}`)}
               accessibilityState={{ selected: (selected ?? appearance.themeId) === id }}
               onPress={() => (onSelect ? onSelect(id) : appearance.preview(id))}
               style={{
@@ -34,16 +34,16 @@ function ThemeCards({
                 borderWidth: (selected ?? appearance.themeId) === id ? 3 : 1,
                 borderColor:
                   (selected ?? appearance.themeId) === id
-                    ? palette.color.brand
+                    ? palette.color.accentInk
                     : palette.color.border,
                 backgroundColor: palette.color.canvas,
               }}
             >
               <Text style={{ fontSize: 24, fontWeight: '800', color: palette.color.ink }}>
-                {t(id === 'neon' ? 'theme_neon' : 'theme_unicorn')}
+                {t(`theme_${id}`)}
               </Text>
               <Text style={{ color: palette.color.muted, fontSize: 15 }}>
-                {t(id === 'neon' ? 'theme_neon_description' : 'theme_unicorn_description')}
+                {t(`theme_${id}_description`)}
               </Text>
               <View style={styles.row}>
                 {palette.swatches.map((swatch) => (

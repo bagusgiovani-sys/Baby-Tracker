@@ -118,6 +118,10 @@ export default function Today() {
           {busy ? t('syncing') : online ? t('online') : t('offline')}
           {pending ? ` · ${pending} ${t('queued')}` : ''}
         </Copy>
+        <View style={styles.row}>
+          <Button secondary title={t('home')} onPress={() => router.push('/home')} />
+          <Button secondary title={t('view_profile')} onPress={() => router.push('/profile')} />
+        </View>
       </Card>
       <Eyebrow>{t('care_overview')}</Eyebrow>
       <Choice

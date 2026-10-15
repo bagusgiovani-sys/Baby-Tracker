@@ -48,7 +48,7 @@ export default function Welcome() {
                     fontSize: wide ? 68 : 43,
                     lineHeight: wide ? 76 : 51,
                     letterSpacing: -2.4,
-                    color: theme.color.brand,
+                    color: theme.color.accentInk,
                   }}
                 >
                   {t('welcome_accent')}

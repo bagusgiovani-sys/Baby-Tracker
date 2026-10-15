@@ -44,7 +44,7 @@ export function StoolColorChoice({
                 gap: 8,
                 backgroundColor: theme.color.paper,
                 borderWidth: color === value ? 2 : 1,
-                borderColor: color === value ? theme.color.brand : theme.color.border,
+                borderColor: color === value ? theme.color.accentInk : theme.color.border,
               }}
             >
               <View

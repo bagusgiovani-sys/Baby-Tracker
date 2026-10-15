@@ -198,7 +198,7 @@ export function Choice({
             <Text
               style={[
                 styles.copy,
-                value === choice.value && { color: theme.color.brand, fontWeight: '600' },
+                value === choice.value && { color: theme.color.accentInk, fontWeight: '600' },
               ]}
             >
               {choice.label}
@@ -401,7 +401,7 @@ const makeStyles = (theme: AppTheme) =>
       fontSize: 11,
       fontWeight: '700',
       letterSpacing: 2,
-      color: theme.color.brand,
+      color: theme.color.accentInk,
       textTransform: 'uppercase',
       lineHeight: 18,
     },
@@ -459,7 +459,7 @@ const makeStyles = (theme: AppTheme) =>
       justifyContent: 'center',
       backgroundColor: theme.color.paper,
     },
-    selected: { backgroundColor: theme.color.mint, borderColor: theme.color.brand },
+    selected: { backgroundColor: theme.color.mint, borderColor: theme.color.accentInk },
     error: { fontSize: 15, lineHeight: 23, color: theme.color.warning },
     loading: {
       flex: 1,

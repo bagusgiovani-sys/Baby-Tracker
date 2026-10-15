@@ -28,34 +28,38 @@ beforeEach(() => {
   mockRead.mockReset().mockResolvedValue(null);
   mockWrite.mockReset().mockResolvedValue(undefined);
 });
-test('first visit chooses cards, teaches header button, persists preference and skips onboarding after reload', async () => {
-  const app = render(<App />);
-  await waitFor(() => expect(app.getByText('choose_theme')).toBeTruthy());
-  fireEvent.press(app.getByRole('radio', { name: 'theme_unicorn' }));
-  fireEvent.press(app.getByRole('button', { name: 'continue' }));
-  expect(app.getByText('theme_tutorial_body')).toBeTruthy();
-  expect(app.getByText('Actual screen')).toBeTruthy();
-  fireEvent.press(app.getByRole('button', { name: 'got_it' }));
-  await waitFor(() => expect(mockWrite).toHaveBeenCalled());
-  const saved = mockWrite.mock.calls.at(-1)![0];
-  expect(JSON.parse(saved)).toMatchObject({ theme: 'unicorn', chosen: true, tutorialSeen: true });
-  app.unmount();
-  mockRead.mockResolvedValue(saved);
-  const reloaded = render(<App />);
-  await waitFor(() => expect(reloaded.getByText('Actual screen')).toBeTruthy());
-  expect(reloaded.queryByText('choose_theme')).toBeNull();
-  expect(reloaded.queryByText('theme_tutorial_body')).toBeNull();
-  fireEvent.press(reloaded.getByRole('button', { name: 'theme_button' }));
-  fireEvent.press(reloaded.getByRole('radio', { name: 'theme_neon' }));
-  fireEvent.press(reloaded.getByRole('button', { name: 'cancel' }));
-  await act(async () => {});
-  expect(JSON.parse(mockWrite.mock.calls.at(-1)![0]).theme).toBe('unicorn');
-  fireEvent.press(reloaded.getByRole('button', { name: 'theme_button' }));
-  expect(reloaded.getByRole('radio', { name: 'theme_unicorn' })).toBeSelected();
-  fireEvent.press(reloaded.getByRole('radio', { name: 'theme_neon' }));
-  fireEvent.press(reloaded.getByRole('button', { name: 'apply_theme' }));
-  await waitFor(() => expect(JSON.parse(mockWrite.mock.calls.at(-1)![0]).theme).toBe('neon'));
-});
+test.each(['unicorn', 'candy'] as const)(
+  'first visit selects %s, persists through reload, and supports cancel/apply',
+  async (themeId) => {
+    const app = render(<App />);
+    await waitFor(() => expect(app.getByText('choose_theme')).toBeTruthy());
+    expect(app.getAllByRole('radio', { name: /^theme_(neon|unicorn|candy)$/ })).toHaveLength(3);
+    fireEvent.press(app.getByRole('radio', { name: `theme_${themeId}` }));
+    fireEvent.press(app.getByRole('button', { name: 'continue' }));
+    expect(app.getByText('theme_tutorial_body')).toBeTruthy();
+    expect(app.getByText('Actual screen')).toBeTruthy();
+    fireEvent.press(app.getByRole('button', { name: 'got_it' }));
+    await waitFor(() => expect(mockWrite).toHaveBeenCalled());
+    const saved = mockWrite.mock.calls.at(-1)![0];
+    expect(JSON.parse(saved)).toMatchObject({ theme: themeId, chosen: true, tutorialSeen: true });
+    app.unmount();
+    mockRead.mockResolvedValue(saved);
+    const reloaded = render(<App />);
+    await waitFor(() => expect(reloaded.getByText('Actual screen')).toBeTruthy());
+    expect(reloaded.queryByText('choose_theme')).toBeNull();
+    expect(reloaded.queryByText('theme_tutorial_body')).toBeNull();
+    fireEvent.press(reloaded.getByRole('button', { name: 'theme_button' }));
+    fireEvent.press(reloaded.getByRole('radio', { name: 'theme_neon' }));
+    fireEvent.press(reloaded.getByRole('button', { name: 'cancel' }));
+    await act(async () => {});
+    expect(JSON.parse(mockWrite.mock.calls.at(-1)![0]).theme).toBe(themeId);
+    fireEvent.press(reloaded.getByRole('button', { name: 'theme_button' }));
+    expect(reloaded.getByRole('radio', { name: `theme_${themeId}` })).toBeSelected();
+    fireEvent.press(reloaded.getByRole('radio', { name: 'theme_neon' }));
+    fireEvent.press(reloaded.getByRole('button', { name: 'apply_theme' }));
+    await waitFor(() => expect(JSON.parse(mockWrite.mock.calls.at(-1)![0]).theme).toBe('neon'));
+  },
+);
 test('storage failure keeps theme choice usable and reports that first-visit persistence could fail', async () => {
   mockWrite.mockRejectedValue(new Error('Synthetic unavailable storage'));
   const app = render(<App />);

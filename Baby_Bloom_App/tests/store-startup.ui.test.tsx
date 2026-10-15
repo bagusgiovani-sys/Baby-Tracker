@@ -2,11 +2,12 @@ import React from 'react';
 import { Text, Pressable } from 'react-native';
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { StoreProvider, useStore } from '../src/lib/store';
-import type { Baby } from '../src/domain/events';
+import type { Baby, BabyInput } from '../src/domain/events';
 
 const mockSession = { access_token: 'synthetic', user: { id: 'synthetic-caregiver' } };
 const mockOpenLocal = jest.fn();
 const mockListBabies = jest.fn();
+const mockCreateBaby = jest.fn();
 let mockOnline = true;
 let mockBabies: Baby[] = [];
 jest.mock('../src/lib/supabase', () => ({
@@ -30,6 +31,7 @@ jest.mock('../src/lib/preferences', () => ({
 jest.mock('../src/data/local/open', () => ({ openLocal: () => mockOpenLocal() }));
 jest.mock('../src/data/remote/supabase', () => ({
   listBabies: () => mockListBabies(),
+  createBaby: (input: BabyInput) => mockCreateBaby(input),
   remote: {},
   pullEvents: async () => null,
 }));
@@ -94,6 +96,7 @@ beforeEach(() => {
   mockBabies = [];
   mockOpenLocal.mockReset().mockResolvedValue({});
   mockListBabies.mockReset().mockResolvedValue([]);
+  mockCreateBaby.mockReset();
 });
 
 test('restored auth opens public startup without waiting for encrypted diary initialization', async () => {
@@ -199,4 +202,52 @@ test('offline startup without a cached profile shows recovery instead of claimin
   await waitFor(() => expect(app.getByText('offline_profile_unavailable')).toBeTruthy());
   expect(app.getByText('profiles pending')).toBeTruthy();
   expect(mockListBabies).not.toHaveBeenCalled();
+});
+
+test('creating a baby completes and selects it while background profile refresh is still pending', async () => {
+  const input: BabyInput = {
+    nickname: 'Synthetic Baby',
+    date_of_birth: '2026-01-01',
+    timezone: 'Asia/Jakarta',
+    gestation_weeks: null,
+    gestation_days: null,
+    growth_reference_sex: null,
+    guardian_confirmed: true,
+    policy_version: '2026-10-draft',
+  };
+  const baby: Baby = { ...input, id: 'synthetic-baby', role: 'owner' };
+  mockCreateBaby.mockResolvedValue(baby);
+  const completed = jest.fn();
+  function CreationProbe() {
+    const store = useStore();
+    return (
+      <>
+        <Probe />
+        <Text>{store.baby?.nickname ?? 'no selected baby'}</Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Create"
+          onPress={() => void store.addBaby(input).then(completed)}
+        >
+          <Text>Create</Text>
+        </Pressable>
+      </>
+    );
+  }
+  const app = render(
+    <StoreProvider>
+      <CreationProbe />
+    </StoreProvider>,
+  );
+  await waitFor(() => expect(app.getByText('profiles ready')).toBeTruthy());
+  let finishRefresh!: (babies: Baby[]) => void;
+  mockListBabies.mockImplementation(
+    () => new Promise<Baby[]>((resolve) => (finishRefresh = resolve)),
+  );
+  await act(async () => fireEvent.press(app.getByRole('button', { name: 'Create' })));
+  await waitFor(() => expect(completed).toHaveBeenCalledTimes(1));
+  expect(app.getByText('Synthetic Baby')).toBeTruthy();
+  expect(mockBabies).toEqual([baby]);
+  expect(mockCreateBaby).toHaveBeenCalledTimes(1);
+  await act(async () => finishRefresh([baby]));
 });
