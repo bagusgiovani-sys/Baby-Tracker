@@ -1,5 +1,7 @@
 # Working checkpoint — 2026-10-15
 
+Published and verified 2026-10-15: application commit 1708fe7 is pushed to main and deployed READY as dpl_6CrGXqK6RZuoyRnMnKR5daa5cSBs at https://baby-bloom-gio.vercel.app. Live HTTPS checks pass for the final bright pink/blue Candy palette, Home/Profile chunks, onboarding correction, SQLite assets, hosting headers and anonymous report API denial. Full npm run check and guarded export pass. Interactive appearance and authenticated profile saving remain unverified; clinical classification remains unavailable. Historical pending/uncommitted notes below are superseded.
+
 ## Latest resumed publication
 
 The final brighter Candy Princess revision separates bright pink button fills from navy accent text, with saturated blue canvas/cards/controls. `npm run check` and `npm run build:vercel` pass on 2026-10-15, including 61 UI cases and the 25-pair contrast regression. Home/Profile, onboarding repair and all palette changes are being committed together and pushed to main. Production verification of this final revision is pending; the prior live deployment is dpl_ATRZb2aYFjLPzkVDbpc8oBR3dp3G. Earlier uncommitted/undeployed notes below describe historical checkpoints. Live authenticated profile saving and clinical classification remain unverified/unavailable respectively.
