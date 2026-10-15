@@ -7,12 +7,12 @@
     "node": "^22.15.0"
   },
   "scripts": {
-    "start": "expo start --dev-client",
+    "start": "node init && expo start --dev-client",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "build:web": "expo export --platform web",
-    "build:vercel": "node --env-file-if-exists=.env --experimental-strip-types scripts/check-deploy-env.mjs && npm run typecheck && npm run build:web",
+    "build:web": "node init && expo export --platform web",
+    "build:vercel": "node init && node --env-file-if-exists=.env --experimental-strip-types scripts/check-deploy-env.mjs && npm run typecheck && npm run build:web",
     "typecheck": "tsc --noEmit",
     "doctor": "node scripts/doctor.cjs",
     "audit:dependencies": "npm audit --offline=false --audit-level=high",
