@@ -57,7 +57,6 @@ export default function SignIn() {
         >
           <Card>
             <Eyebrow>{t('app')}</Eyebrow>
-            <Heading style={{ fontSize: 28, lineHeight: 36 }}>{t('auth_title')}</Heading>
             <View style={{ height: 1, backgroundColor: theme.color.border, marginVertical: 6 }} />
             <EmailAuthForm
               onVerified={() => {

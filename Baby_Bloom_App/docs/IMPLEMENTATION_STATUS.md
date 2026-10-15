@@ -1,5 +1,7 @@
 # Sprint 0/1 implementation status
 
+Password authentication update (2026-10-15): email/password login, explicit registration and recovery replace the old OTP UI. Existing users can set their first password through Forgot password. Full npm run check passes 136 cases (51 core, 21 database, 64 UI); guarded production export passes. Publication is in progress. Hosted email confirmation and recovery email delivery remain dependent on existing Supabase settings; no private account has been used for testing.
+
 Published and verified 2026-10-15: application commit 1708fe7 is pushed to main and deployed READY as dpl_6CrGXqK6RZuoyRnMnKR5daa5cSBs at https://baby-bloom-gio.vercel.app. Live HTTPS checks pass for the final bright pink/blue Candy palette, Home/Profile chunks, onboarding correction, SQLite assets, hosting headers and anonymous report API denial. Full npm run check and guarded export pass. Interactive appearance and authenticated profile saving remain unverified; clinical classification remains unavailable. Historical pending/uncommitted notes below are superseded.
 
 Latest continuation (2026-10-15): final Candy Princess revision uses bright pink fills, navy accent text and saturated blue surfaces. Full `npm run check` and guarded production export pass, including 61 UI cases and all 25 contrast combinations. Home/Profile, profile-creation repair and palette revisions are being committed/pushed together; final production verification is pending. Older publication notes below are historical.

@@ -1,207 +1,201 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Platform, Text, View } from 'react-native';
 import { z } from 'zod';
-import { Button, Copy, Feedback, Field, useUIStyles } from '../components/ui';
+import { Button, Copy, Feedback, Field, Heading, useUIStyles } from '../components/ui';
 import { useStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import type { TextKey } from '../lib/i18n';
 
-const RESEND_SECONDS = 60;
-function authError(error: { code?: string; status?: number } | null, verifying: boolean): TextKey {
-  if (
-    error?.status === 429 ||
-    error?.code === 'over_email_send_rate_limit' ||
-    error?.code === 'over_request_rate_limit'
-  )
-    return 'auth_rate_limited';
-  if (error?.code === 'otp_expired') return 'auth_invalid_code';
-  return verifying ? 'auth_verify_failed' : 'auth_send_failed';
+type Mode = 'login' | 'register' | 'forgot' | 'update';
+function authCallbackUrl() {
+  return Platform.OS === 'web'
+    ? `${window.location.origin}/auth/callback`
+    : 'babybloom://auth/callback';
+}
+function authError(error: { code?: string; status?: number }): TextKey {
+  if (error.status === 429 || error.code?.includes('rate_limit')) return 'auth_rate_limited';
+  if (error.code === 'invalid_credentials') return 'password_login_failed';
+  if (error.code === 'email_not_confirmed') return 'registration_confirm';
+  if (error.code === 'weak_password') return 'password_weak';
+  if (error.code === 'same_password') return 'password_different';
+  if (error.code === 'user_already_exists' || error.code === 'email_exists')
+    return 'registration_existing';
+  return 'password_request_failed';
 }
 
-export function EmailAuthForm({ onVerified }: { onVerified?: () => void } = {}) {
-  const styles = useUIStyles();
+export function EmailAuthForm({
+  onVerified,
+  recovery = false,
+}: { onVerified?: () => void; recovery?: boolean } = {}) {
   const { t } = useStore();
+  const styles = useUIStyles();
+  const [mode, setMode] = useState<Mode>(recovery ? 'update' : 'login');
   const [email, setEmail] = useState('');
-  const [requestedEmail, setRequestedEmail] = useState<string | null>(null);
-  const [code, setCode] = useState('');
-  const [busy, setBusy] = useState<'send' | 'verify' | null>(null);
+  const [password, setPassword] = useState('');
+  const [confirmation, setConfirmation] = useState('');
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<TextKey | null>(null);
-  const [resendAt, setResendAt] = useState(0);
-  const [clock, setClock] = useState(() => Date.now());
-  const [delivery, setDelivery] = useState<'sent' | 'resent' | null>(null);
+  const [notice, setNotice] = useState<TextKey | null>(null);
   const pending = useRef(false);
-  const deadline = useRef(0);
-  const remaining = Math.max(0, Math.ceil((resendAt - clock) / 1000));
-  useEffect(() => {
-    if (!resendAt) return;
-    const timer = setInterval(() => {
-      const now = Date.now();
-      setClock(now);
-      if (now >= resendAt) clearInterval(timer);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [resendAt]);
-  const cooldown = () => {
-    const now = Date.now();
-    deadline.current = now + RESEND_SECONDS * 1000;
-    setResendAt(deadline.current);
-    setClock(now);
-  };
-  const send = async () => {
-    if (pending.current || Date.now() < deadline.current) return;
-    if (!supabase) {
-      setError('config_required');
-      return;
-    }
-    const address = requestedEmail ?? email.trim();
-    if (!z.email().safeParse(address).success) {
-      setError('auth_invalid_email');
-      return;
-    }
-    pending.current = true;
-    setBusy('send');
+  const creatingPassword = mode === 'register' || mode === 'update';
+  const action: TextKey =
+    mode === 'login'
+      ? 'password_sign_in'
+      : mode === 'register'
+        ? 'register_account'
+        : mode === 'forgot'
+          ? 'send_password_reset'
+          : 'save_password';
+  const changeMode = (next: Mode) => {
+    if (pending.current) return;
+    setMode(next);
+    setPassword('');
+    setConfirmation('');
     setError(null);
-    setDelivery(null);
+    setNotice(null);
+  };
+  const submit = async () => {
+    if (pending.current) return;
+    setError(null);
+    setNotice(null);
+    if (!supabase) return setError('config_required');
+    const address = email.trim();
+    if (mode !== 'update' && !z.email().safeParse(address).success)
+      return setError('auth_invalid_email');
+    if (mode !== 'forgot' && !password) return setError('password_required');
+    if (creatingPassword && password.length < 8) return setError('password_minimum');
+    if (creatingPassword && password !== confirmation) return setError('password_mismatch');
+    pending.current = true;
+    setBusy(true);
     try {
-      const response = await supabase.auth.signInWithOtp({
-        email: address,
-        options: {
-          shouldCreateUser: true,
-          emailRedirectTo:
-            Platform.OS === 'web'
-              ? `${window.location.origin}/auth/callback`
-              : 'babybloom://auth/callback',
-        },
-      });
-      if (response.error) {
-        const message = authError(response.error, false);
-        setError(message);
-        if (message === 'auth_rate_limited') cooldown();
+      if (mode === 'forgot') {
+        const { error: failure } = await supabase.auth.resetPasswordForEmail(address, {
+          redirectTo: authCallbackUrl(),
+        });
+        if (failure) setError(authError(failure));
+        else setNotice('password_reset_sent');
+      } else if (mode === 'update') {
+        const { error: failure } = await supabase.auth.updateUser({ password });
+        if (failure) setError(authError(failure));
+        else {
+          setPassword('');
+          setConfirmation('');
+          onVerified?.();
+        }
       } else {
-        setRequestedEmail(address);
-        setCode('');
-        setDelivery(requestedEmail ? 'resent' : 'sent');
-        cooldown();
+        const { data, error: failure } =
+          mode === 'register'
+            ? await supabase.auth.signUp({
+                email: address,
+                password,
+                options: { emailRedirectTo: authCallbackUrl() },
+              })
+            : await supabase.auth.signInWithPassword({ email: address, password });
+        if (failure) setError(authError(failure));
+        else {
+          setPassword('');
+          setConfirmation('');
+          if (data.session) onVerified?.();
+          else if (mode === 'register') setNotice('registration_confirm');
+          else setError('password_login_failed');
+        }
       }
     } catch {
-      setError('auth_send_failed');
+      setError('password_request_failed');
     } finally {
       pending.current = false;
-      setBusy(null);
-    }
-  };
-  const verify = async () => {
-    if (pending.current || !requestedEmail) return;
-    if (!supabase) {
-      setError('config_required');
-      return;
-    }
-    if (!code.trim()) {
-      setError('auth_invalid_code');
-      return;
-    }
-    pending.current = true;
-    setBusy('verify');
-    setError(null);
-    try {
-      const response = await supabase.auth.verifyOtp({
-        email: requestedEmail,
-        token: code.trim(),
-        type: 'email',
-      });
-      if (response.error) setError(authError(response.error, true));
-      else onVerified?.();
-    } catch {
-      setError('auth_verify_failed');
-    } finally {
-      pending.current = false;
-      setBusy(null);
+      setBusy(false);
     }
   };
   return (
-    <View style={{ gap: 20 }}>
-      <Copy muted>{t('auth_explanation')}</Copy>
-      <Field
-        label={t('email')}
-        value={requestedEmail ?? email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        autoComplete="email"
-        placeholder={t('email_placeholder')}
-        editable={!requestedEmail && !busy}
-        onSubmitEditing={() => {
-          if (!requestedEmail) void send();
-        }}
-      />
-      {requestedEmail && (
+    <View style={{ gap: 18 }}>
+      <Heading style={{ fontSize: 24, lineHeight: 32 }}>
+        {t(mode === 'forgot' ? 'forgot_password' : mode === 'update' ? 'set_password' : action)}
+      </Heading>
+      <Copy muted>
+        {t(
+          mode === 'forgot'
+            ? 'password_reset_help'
+            : mode === 'update'
+              ? 'password_minimum'
+              : 'auth_explanation',
+        )}
+      </Copy>
+      {mode !== 'update' && (
+        <Field
+          label={t('email')}
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="email-address"
+          autoComplete="email"
+          placeholder={t('email_placeholder')}
+          editable={!busy}
+        />
+      )}
+      {mode !== 'forgot' && (
+        <Field
+          label={t('password')}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete={creatingPassword ? 'new-password' : 'current-password'}
+          editable={!busy}
+          onSubmitEditing={() => {
+            if (mode === 'login') void submit();
+          }}
+        />
+      )}
+      {creatingPassword && (
         <>
-          <Copy>{t('check_email')}</Copy>
+          {mode === 'register' && <Copy muted>{t('password_minimum')}</Copy>}
           <Field
-            label={t('code')}
-            value={code}
-            onChangeText={setCode}
-            keyboardType="number-pad"
-            autoComplete="one-time-code"
-            autoFocus
-            placeholder={t('code_placeholder')}
+            label={t('confirm_password')}
+            value={confirmation}
+            onChangeText={setConfirmation}
+            secureTextEntry
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="new-password"
             editable={!busy}
             onSubmitEditing={() => {
-              void verify();
+              void submit();
             }}
           />
         </>
       )}
-      {delivery && (
+      {notice && (
         <Text accessibilityLiveRegion="polite" style={styles.copy}>
-          {t(delivery === 'resent' ? 'email_resent' : 'email_sent')}
+          {t(notice)}
         </Text>
       )}
       {error && <Feedback message={t(error)} />}
       <Button
-        title={t(
-          busy === 'verify'
-            ? 'verifying'
-            : busy === 'send'
-              ? 'sending_email'
-              : requestedEmail
-                ? 'verify'
-                : 'send_code',
-        )}
-        disabled={Boolean(busy) || (!requestedEmail && remaining > 0)}
+        title={t(busy ? 'auth_working' : action)}
+        disabled={busy}
         onPress={() => {
-          void (requestedEmail ? verify() : send());
+          void submit();
         }}
       />
-      {requestedEmail && (
-        <>
-          <Button
-            secondary
-            title={remaining > 0 ? `${t('resend_in')} ${remaining}s` : t('resend_code')}
-            disabled={Boolean(busy) || remaining > 0}
-            onPress={() => {
-              void send();
-            }}
-          />
-          <Button
-            secondary
-            title={t('change_email')}
-            disabled={Boolean(busy)}
-            onPress={() => {
-              setRequestedEmail(null);
-              setCode('');
-              setError(null);
-              setDelivery(null);
-            }}
-          />
-        </>
+      {mode !== 'update' && (
+        <Button
+          secondary
+          title={t(mode === 'login' ? 'register_instead' : 'login_instead')}
+          disabled={busy}
+          onPress={() => changeMode(mode === 'login' ? 'register' : 'login')}
+        />
       )}
-      {!requestedEmail && remaining > 0 && (
-        <Copy muted>
-          {t('resend_in')} {remaining}s
-        </Copy>
+      {mode === 'login' && (
+        <Button
+          secondary
+          title={t('forgot_password')}
+          disabled={busy}
+          onPress={() => changeMode('forgot')}
+        />
       )}
-      {requestedEmail && <Copy muted>{t('email_delivery_hint')}</Copy>}
     </View>
   );
 }

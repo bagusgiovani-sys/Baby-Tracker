@@ -1,15 +1,18 @@
-import React from 'react';
+﻿import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { EmailAuthForm } from '../src/features/email-auth';
 import { translate as mockTranslate } from '../src/lib/i18n';
-
-const mockSend = jest.fn();
-const mockVerify = jest.fn();
+const mockLogin = jest.fn();
+const mockSignup = jest.fn();
+const mockReset = jest.fn();
+const mockUpdate = jest.fn();
 jest.mock('../src/lib/supabase', () => ({
   supabase: {
     auth: {
-      signInWithOtp: (...args: unknown[]) => mockSend(...args),
-      verifyOtp: (...args: unknown[]) => mockVerify(...args),
+      signInWithPassword: (...args: unknown[]) => mockLogin(...args),
+      signUp: (...args: unknown[]) => mockSignup(...args),
+      resetPasswordForEmail: (...args: unknown[]) => mockReset(...args),
+      updateUser: (...args: unknown[]) => mockUpdate(...args),
     },
   },
 }));
@@ -22,140 +25,138 @@ jest.mock('../src/lib/store', () => ({
 jest.mock('expo-router', () => ({
   router: { push: jest.fn(), back: jest.fn(), canGoBack: () => true },
 }));
-
 beforeEach(() => {
-  jest.useFakeTimers();
-  jest.setSystemTime(new Date('2026-10-14T08:00:00Z'));
-  mockSend.mockReset().mockResolvedValue({ error: null });
-  mockVerify.mockReset().mockResolvedValue({ error: null });
+  mockLogin.mockReset().mockResolvedValue({ data: { session: {} }, error: null });
+  mockSignup.mockReset().mockResolvedValue({ data: { session: null }, error: null });
+  mockReset.mockReset().mockResolvedValue({ error: null });
+  mockUpdate.mockReset().mockResolvedValue({ error: null });
 });
-afterEach(() => {
-  jest.useRealTimers();
-});
-async function requestEmail() {
-  fireEvent.changeText(screen.getByLabelText('Email'), ' parent@example.com ');
+const email = () => fireEvent.changeText(screen.getByLabelText('Email'), ' parent@example.com ');
+const password = () =>
+  fireEvent.changeText(screen.getByLabelText('Password'), ' synthetic password ');
+async function press(name: string) {
   await act(async () => {
-    fireEvent.press(screen.getByRole('button', { name: 'Send sign-in email' }));
+    fireEvent.press(screen.getByRole('button', { name }));
   });
 }
-test('one email flow explicitly supports account creation and verification; duplicate sends cannot bypass cooldown', async () => {
-  render(<EmailAuthForm />);
-  expect(screen.getByText(/same email flow signs you in or creates your account/)).toBeTruthy();
-  await requestEmail();
-  expect(mockSend).toHaveBeenCalledTimes(1);
-  expect(mockSend).toHaveBeenCalledWith(
-    expect.objectContaining({
-      email: 'parent@example.com',
-      options: expect.objectContaining({ shouldCreateUser: true }),
-    }),
-  );
-  expect(screen.getByRole('button', { name: 'Resend available in 60s' })).toBeDisabled();
-  act(() => {
-    jest.advanceTimersByTime(60000);
-  });
-  await act(async () => {
-    fireEvent.press(screen.getByRole('button', { name: 'Resend email / code' }));
-  });
-  expect(mockSend).toHaveBeenCalledTimes(2);
-  expect(screen.getByText('Sign-in email resent. Use the latest email.')).toBeTruthy();
-  fireEvent.changeText(screen.getByLabelText('Code from your email'), '123456');
-  await act(async () => {
-    fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
-  });
-  expect(mockVerify).toHaveBeenCalledWith({
-    email: 'parent@example.com',
-    token: '123456',
-    type: 'email',
-  });
-});
 
-test('navigation after sign-in occurs only after successful code verification', async () => {
+test('password login calls password API directly, preserves password whitespace, and enters only with a session', async () => {
   const verified = jest.fn();
   render(<EmailAuthForm onVerified={verified} />);
-  await requestEmail();
-  expect(verified).not.toHaveBeenCalled();
-  fireEvent.changeText(screen.getByLabelText('Code from your email'), '123456');
-  mockVerify.mockResolvedValueOnce({ error: { code: 'otp_expired' } });
-  await act(async () => {
-    fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
+  expect(screen.queryByLabelText('Code from your email')).toBeNull();
+  email();
+  password();
+  expect(screen.getByLabelText('Password').props.secureTextEntry).toBe(true);
+  mockLogin.mockResolvedValueOnce({
+    data: { session: null },
+    error: { code: 'invalid_credentials' },
   });
+  await press('Sign in');
   expect(verified).not.toHaveBeenCalled();
-  await act(async () => {
-    fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
+  expect(screen.getByRole('alert')).toHaveTextContent(/Incorrect email or password/);
+  await press('Sign in');
+  expect(mockLogin).toHaveBeenLastCalledWith({
+    email: 'parent@example.com',
+    password: ' synthetic password ',
   });
   expect(verified).toHaveBeenCalledTimes(1);
+  expect(mockSignup).not.toHaveBeenCalled();
+  expect(mockReset).not.toHaveBeenCalled();
 });
-test('failed resend preserves the entered code and permits retry instead of falsely reporting delivery', async () => {
-  render(<EmailAuthForm />);
-  await requestEmail();
-  fireEvent.changeText(screen.getByLabelText('Code from your email'), '654321');
-  act(() => {
-    jest.advanceTimersByTime(60000);
-  });
-  mockSend.mockResolvedValueOnce({ error: { status: 503, code: 'unexpected_failure' } });
-  await act(async () => {
-    fireEvent.press(screen.getByRole('button', { name: 'Resend email / code' }));
-  });
-  expect(screen.getByLabelText('Code from your email')).toHaveDisplayValue('654321');
-  expect(screen.getByRole('alert')).toHaveTextContent(/The email could not be sent/);
-  expect(screen.queryByText('Sign-in email resent. Use the latest email.')).toBeNull();
-  expect(screen.getByRole('button', { name: 'Resend email / code' })).toBeEnabled();
-});
-test('change email unlocks the address without bypassing the sending cooldown', async () => {
-  render(<EmailAuthForm />);
-  await requestEmail();
-  await act(async () => {
-    fireEvent.press(screen.getByRole('button', { name: 'Change email address' }));
-  });
-  expect(screen.getByLabelText('Email').props.editable).toBe(true);
-  expect(screen.queryByLabelText('Code from your email')).toBeNull();
-  expect(screen.getByRole('button', { name: 'Send sign-in email' })).toBeDisabled();
-  fireEvent.changeText(screen.getByLabelText('Email'), 'another@example.com');
-  act(() => {
-    jest.advanceTimersByTime(60000);
-  });
-  await act(async () => {
-    fireEvent.press(screen.getByRole('button', { name: 'Send sign-in email' }));
-  });
-  expect(mockSend).toHaveBeenLastCalledWith(
-    expect.objectContaining({ email: 'another@example.com' }),
+test('registration validates matching strong-enough passwords and waits for required email confirmation', async () => {
+  const verified = jest.fn();
+  render(<EmailAuthForm onVerified={verified} />);
+  await press('New here? Create an account');
+  email();
+  fireEvent.changeText(screen.getByLabelText('Password'), 'short');
+  await press('Create account');
+  expect(mockSignup).not.toHaveBeenCalled();
+  password();
+  await press('Create account');
+  expect(screen.getByRole('alert')).toHaveTextContent(/Both passwords must match/);
+  fireEvent.changeText(screen.getByLabelText('Confirm password'), ' synthetic password ');
+  await press('Create account');
+  expect(mockSignup).toHaveBeenCalledWith(
+    expect.objectContaining({
+      email: 'parent@example.com',
+      password: ' synthetic password ',
+      options: { emailRedirectTo: 'babybloom://auth/callback' },
+    }),
   );
+  expect(verified).not.toHaveBeenCalled();
+  expect(screen.getByText(/Check your email to confirm registration/)).toBeTruthy();
+  expect(screen.getByLabelText('Password')).toHaveDisplayValue('');
 });
-test('invalid emails never request delivery and server rate limits receive a bounded actionable message', async () => {
-  render(<EmailAuthForm />);
-  fireEvent.changeText(screen.getByLabelText('Email'), 'not-an-email');
-  await act(async () => {
-    fireEvent.press(screen.getByRole('button', { name: 'Send sign-in email' }));
+test('registration enters immediately when backend returns an authenticated session', async () => {
+  mockSignup.mockResolvedValue({ data: { session: {} }, error: null });
+  const verified = jest.fn();
+  render(<EmailAuthForm onVerified={verified} />);
+  await press('New here? Create an account');
+  email();
+  password();
+  fireEvent.changeText(screen.getByLabelText('Confirm password'), ' synthetic password ');
+  await press('Create account');
+  expect(verified).toHaveBeenCalledTimes(1);
+});
+test('recovery requests do not sign in and give neutral delivery feedback', async () => {
+  const verified = jest.fn();
+  render(<EmailAuthForm onVerified={verified} />);
+  await press('Forgot password?');
+  email();
+  await press('Send recovery email');
+  expect(mockReset).toHaveBeenCalledWith('parent@example.com', {
+    redirectTo: 'babybloom://auth/callback',
   });
-  expect(mockSend).not.toHaveBeenCalled();
-  expect(screen.getByRole('alert')).toHaveTextContent('Enter a valid email address.');
-  mockSend.mockResolvedValueOnce({ error: { status: 429, code: 'over_email_send_rate_limit' } });
-  await requestEmail();
-  expect(screen.getByRole('alert')).toHaveTextContent(/Too many email requests/);
-  expect(screen.queryByLabelText('Code from your email')).toBeNull();
-  expect(screen.getByRole('button', { name: 'Send sign-in email' })).toBeDisabled();
+  expect(screen.getByText(/If the account can be recovered/)).toBeTruthy();
+  expect(verified).not.toHaveBeenCalled();
+  expect(mockLogin).not.toHaveBeenCalled();
 });
-test('in-flight requests block another send and an empty code cannot reach verification', async () => {
-  let resolveSend!: (value: { error: null }) => void;
-  mockSend.mockImplementationOnce(
-    () =>
-      new Promise((resolve) => {
-        resolveSend = resolve;
-      }),
+test('recovery updates password and waits for success before continuing', async () => {
+  const verified = jest.fn();
+  render(<EmailAuthForm recovery onVerified={verified} />);
+  password();
+  fireEvent.changeText(screen.getByLabelText('Confirm password'), ' synthetic password ');
+  mockUpdate.mockResolvedValueOnce({ error: { code: 'weak_password' } });
+  await press('Save password and continue');
+  expect(verified).not.toHaveBeenCalled();
+  expect(screen.getByRole('alert')).toHaveTextContent(/too weak/);
+  await press('Save password and continue');
+  expect(mockUpdate).toHaveBeenLastCalledWith({ password: ' synthetic password ' });
+  expect(verified).toHaveBeenCalledTimes(1);
+});
+test('validation, server rate limits and thrown network failures never report success', async () => {
+  render(<EmailAuthForm />);
+  await press('Sign in');
+  expect(mockLogin).not.toHaveBeenCalled();
+  email();
+  await press('Sign in');
+  expect(mockLogin).not.toHaveBeenCalled();
+  password();
+  mockLogin.mockResolvedValueOnce({ data: {}, error: { status: 429 } });
+  await press('Sign in');
+  expect(screen.getByRole('alert')).toHaveTextContent(/Too many attempts/);
+  mockLogin.mockRejectedValueOnce(new Error('network'));
+  await press('Sign in');
+  expect(screen.getByRole('alert')).toHaveTextContent(/request did not succeed/);
+});
+test('synchronous duplicate submit guard prevents two login requests', async () => {
+  let finish!: (value: unknown) => void;
+  mockLogin.mockReturnValue(
+    new Promise((resolve) => {
+      finish = resolve;
+    }),
   );
   render(<EmailAuthForm />);
-  fireEvent.changeText(screen.getByLabelText('Email'), 'parent@example.com');
-  await act(async () => {
-    fireEvent.press(screen.getByRole('button', { name: 'Send sign-in email' }));
+  email();
+  password();
+  const button = screen.getByRole('button', { name: 'Sign in' });
+  act(() => {
+    fireEvent.press(button);
+    fireEvent.press(button);
   });
-  expect(screen.getByRole('button', { name: 'Sending email…' })).toBeDisabled();
-  expect(mockSend).toHaveBeenCalledTimes(1);
+  expect(mockLogin).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole('button', { name: 'Working…' })).toBeDisabled();
   await act(async () => {
-    resolveSend({ error: null });
+    finish({ data: { session: {} }, error: null });
   });
-  await act(async () => {
-    fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
-  });
-  expect(mockVerify).not.toHaveBeenCalled();
-  expect(screen.getByRole('alert')).toHaveTextContent(/This code is invalid or expired/);
 });

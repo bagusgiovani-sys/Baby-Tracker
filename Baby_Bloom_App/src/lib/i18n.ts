@@ -1,4 +1,32 @@
 export const id = {
+  password: 'Kata sandi',
+  confirm_password: 'Ulangi kata sandi',
+  password_sign_in: 'Masuk',
+  register_account: 'Buat akun',
+  register_instead: 'Belum punya akun? Daftar',
+  login_instead: 'Sudah punya akun? Masuk',
+  forgot_password: 'Lupa kata sandi?',
+  send_password_reset: 'Kirim email pemulihan',
+  set_password: 'Buat kata sandi baru',
+  save_password: 'Simpan kata sandi dan lanjutkan',
+  auth_working: 'Memproses…',
+  password_required: 'Masukkan kata sandi.',
+  password_minimum: 'Gunakan sedikitnya 8 karakter untuk kata sandi baru.',
+  password_mismatch: 'Kedua kata sandi harus sama.',
+  password_login_failed: 'Email atau kata sandi salah. Coba lagi atau pulihkan kata sandi.',
+  password_weak:
+    'Kata sandi ini terlalu lemah atau pernah bocor. Pilih kata sandi yang lebih kuat.',
+  password_different: 'Pilih kata sandi yang berbeda dari kata sandi sebelumnya.',
+  password_request_failed: 'Permintaan belum berhasil. Periksa koneksi, lalu coba lagi.',
+  registration_existing: 'Gunakan Masuk atau Lupa kata sandi untuk akun yang sudah terdaftar.',
+  registration_confirm:
+    'Periksa email untuk konfirmasi pendaftaran, lalu masuk dengan kata sandi. Jika sudah punya akun, gunakan Masuk atau Lupa kata sandi.',
+  password_reset_help:
+    'Masukkan email akun untuk membuat kata sandi baru. Pernah masuk melalui tautan email? Gunakan langkah ini untuk membuat kata sandi pertama. Buka email pemulihan di browser ini.',
+  password_reset_sent:
+    'Jika akun dapat dipulihkan, email pemulihan akan dikirim. Periksa kotak masuk dan spam, lalu buka tautan di browser ini.',
+  auth_callback_failed:
+    'Tautan tidak valid, sudah digunakan, atau dibuka di browser lain. Kembali ke halaman masuk dan minta email pemulihan baru jika diperlukan.',
   saved_profile: 'Profil bayi',
   profile_access: 'Akses kamu',
   profile_owner: 'Pemilik profil',
@@ -228,7 +256,7 @@ export const id = {
   auth_accent: 'Semua momennya.',
   auth_title: 'Masuk atau buat akun',
   auth_explanation:
-    'Tidak perlu kata sandi. Email yang sama untuk masuk dan mendaftar. Akun baru dibuat otomatis; setelah masuk, lengkapi profil bayi dan persetujuan wali.',
+    'Masuk dengan email dan kata sandi. Pengguna baru dapat membuat akun, lalu melengkapi profil bayi.',
   email_placeholder: 'nama@contoh.com',
   code_placeholder: 'Masukkan kode dari email',
   resend_code: 'Kirim ulang email / kode',
@@ -241,8 +269,7 @@ export const id = {
   email_delivery_hint:
     'Belum sampai? Periksa spam. Jika email berisi tautan, buka tautan di browser ini. Anda dapat mengirim ulang setelah hitung mundur selesai.',
   auth_invalid_email: 'Masukkan alamat email yang valid.',
-  auth_rate_limited:
-    'Terlalu banyak permintaan email. Tunggu hitung mundur selesai, lalu coba lagi. Batas layanan email dapat memerlukan waktu lebih lama.',
+  auth_rate_limited: 'Terlalu banyak percobaan. Tunggu beberapa saat sebelum mencoba lagi.',
   auth_invalid_code: 'Kode tidak valid atau sudah kedaluwarsa. Periksa kode atau minta email baru.',
   auth_send_failed:
     'Email belum berhasil dikirim. Periksa koneksi dan alamat email, lalu coba lagi.',
@@ -458,6 +485,33 @@ export const id = {
 export type TextKey = keyof typeof id;
 export type Locale = 'id-ID' | 'en';
 export const en: Record<TextKey, string> = {
+  password: 'Password',
+  confirm_password: 'Confirm password',
+  password_sign_in: 'Sign in',
+  register_account: 'Create account',
+  register_instead: 'New here? Create an account',
+  login_instead: 'Already have an account? Sign in',
+  forgot_password: 'Forgot password?',
+  send_password_reset: 'Send recovery email',
+  set_password: 'Set a new password',
+  save_password: 'Save password and continue',
+  auth_working: 'Working…',
+  password_required: 'Enter your password.',
+  password_minimum: 'Use at least 8 characters for a new password.',
+  password_mismatch: 'Both passwords must match.',
+  password_login_failed: 'Incorrect email or password. Try again or reset your password.',
+  password_weak: 'This password is too weak or has been exposed. Choose a stronger password.',
+  password_different: 'Choose a password different from your previous password.',
+  password_request_failed: 'The request did not succeed. Check your connection and try again.',
+  registration_existing: 'Use Sign in or Forgot password for an existing account.',
+  registration_confirm:
+    'Check your email to confirm registration, then sign in with your password. If you already have an account, use Sign in or Forgot password.',
+  password_reset_help:
+    'Enter your account email to set a new password. Previously used an email sign-in link? Use this to set your first password. Open the recovery email in this browser.',
+  password_reset_sent:
+    'If the account can be recovered, a recovery email will arrive. Check your inbox and spam, then open the link in this browser.',
+  auth_callback_failed:
+    'This link is invalid, already used, or opened in a different browser. Return to sign in and request a new recovery email if needed.',
   saved_profile: 'Baby profile',
   profile_access: 'Your access',
   profile_owner: 'Profile owner',
@@ -685,7 +739,7 @@ export const en: Record<TextKey, string> = {
   auth_accent: 'Every moment.',
   auth_title: 'Sign in or create an account',
   auth_explanation:
-    'No password needed. The same email flow signs you in or creates your account. First time here? Set up your baby profile and guardian consent after signing in.',
+    'Sign in with your email and password. New here? Create an account, then set up your baby profile.',
   email_placeholder: 'you@example.com',
   code_placeholder: 'Enter the code from your email',
   resend_code: 'Resend email / code',
@@ -698,8 +752,7 @@ export const en: Record<TextKey, string> = {
   email_delivery_hint:
     'Nothing yet? Check spam. If the email contains a link, open it in this browser. You can resend when the countdown ends.',
   auth_invalid_email: 'Enter a valid email address.',
-  auth_rate_limited:
-    'Too many email requests. Wait for the countdown, then try again. Email service limits may require a longer wait.',
+  auth_rate_limited: 'Too many attempts. Please wait a while before trying again.',
   auth_invalid_code: 'This code is invalid or expired. Check it or request a fresh email.',
   auth_send_failed:
     'The email could not be sent. Check your connection and email address, then try again.',
